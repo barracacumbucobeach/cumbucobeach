@@ -383,6 +383,15 @@
     return found || c;
   }
 
+  /* Remove o cliente da base. As reservas dele continuam guardadas:
+     o cadastro volta a ser criado se ele reservar de novo. */
+  function deleteCustomer(id) {
+    var db = read();
+    db.customers = db.customers.filter(function (c) { return c.id !== id; });
+    write(db);
+    return id;
+  }
+
   /* ---------- lista de espera ---------- */
   function getWaitlist() { return read().waitlist.slice().reverse(); }
   function saveWaitlist(w) {
@@ -542,7 +551,7 @@
     ocupacao: ocupacao, checkAvailability: checkAvailability,
     getReservations: getReservations, getReservationById: getReservationById, getReservationByCode: getReservationByCode,
     saveReservation: saveReservation, updateReservation: updateReservation, setStatus: setStatus, statusEm: statusEm, deleteReservation: deleteReservation,
-    getCustomers: getCustomers, saveCustomer: saveCustomer,
+    getCustomers: getCustomers, saveCustomer: saveCustomer, deleteCustomer: deleteCustomer,
     getWaitlist: getWaitlist, saveWaitlist: saveWaitlist, deleteWaitlist: deleteWaitlist,
     report: report, dashboard: dashboard,
     reservationsCSV: reservationsCSV, exportCSV: exportCSV, exportBackup: exportBackup, importBackup: importBackup,

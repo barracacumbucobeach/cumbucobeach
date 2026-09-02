@@ -44,6 +44,9 @@
               <td style="padding:13px 14px;font-size:13px;color:#9B3B34">{{ c.cancelamentos }}</td>
               <td style="padding:13px 14px;font-size:13px;color:#6B4A6B">{{ c.noshows }}</td>
               <td style="padding:13px 14px;font-size:13px;color:#3E525C;white-space:nowrap">{{ c.ultima }}</td>
+              <td style="padding:13px 14px;text-align:right">
+                <button type="button" onClick="{{ c.excluir }}" title="Remover este cliente da base" style="cursor:pointer;background:#fff;border:1px solid rgba(155,59,52,.45);color:#9B3B34;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.05em;white-space:nowrap" style-hover="background:#FBEFEE">{{ c.labelExcluir }}</button>
+              </td>
             </tr>
           </sc-for>
         </tbody>
@@ -70,13 +73,22 @@
         </sc-if>
       </div>
     </section>
+
+    <sc-if value="{{ temToast }}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:60;background:#12303F;color:#F7EEDA;padding:14px 20px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 18px 44px rgba(0,0,0,.28);max-width:92vw;text-align:center">{{ toastMsg }}</div>
+    </sc-if>
   </main>
 </div>
 
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  state = { clientes: [], espera: [], pronto: false };
+  state = { clientes: [], espera: [], pronto: false, armado: '', toastMsg: '' };
+  toast(m) {
+    clearTimeout(this._tt);
+    this.setState({ toastMsg: m });
+    this._tt = setTimeout(() => this.setState({ toastMsg: '' }), 4000);
+  }
   componentDidMount() {
     const tick = () => {
       if (!window.CB) return setTimeout(tick, 60);
@@ -91,13 +103,30 @@ class Component extends DCLogic {
   renderVals() {
     const CB = window.CB, s = this.state;
     return {
-      colunas: ['NOME', 'TELEFONE', 'E-MAIL', 'RESERVAS', 'CANCELAMENTOS', 'NÃO COMPARECEU', 'ÚLTIMA RESERVA'],
+      toastMsg: s.toastMsg,
+      temToast: !!s.toastMsg,
+      colunas: ['NOME', 'TELEFONE', 'E-MAIL', 'RESERVAS', 'CANCELAMENTOS', 'NÃO COMPARECEU', 'ÚLTIMA RESERVA', ''],
       contagem: s.clientes.length + ' cliente(s) registrado(s)',
       vazio: s.pronto && s.clientes.length === 0,
       clientes: s.clientes.map(c => ({
         nome: c.nome, telefone: c.telefone, email: c.email || '—',
         reservas: String(c.reservas), cancelamentos: String(c.cancelamentos), noshows: String(c.noshows),
-        ultima: c.ultima ? CB.fmtDate(c.ultima) : '—'
+        ultima: c.ultima ? CB.fmtDate(c.ultima) : '—',
+        // exclusão em dois toques, para não apagar sem querer
+        labelExcluir: s.armado === c.id ? 'CONFIRMAR' : 'EXCLUIR',
+        excluir: () => {
+          if (s.armado !== c.id) {
+            clearTimeout(this._ta);
+            this.setState({ armado: c.id });
+            this._ta = setTimeout(() => this.setState({ armado: '' }), 6000);
+            return this.toast('Clique de novo em CONFIRMAR para remover ' + c.nome + ' da base.');
+          }
+          clearTimeout(this._ta);
+          CB.deleteCustomer(c.id);
+          this.setState({ armado: '' });
+          this.load();
+          this.toast(c.nome + ' removido da base de clientes.');
+        }
       })),
       espera: s.espera.map(w => ({
         nome: w.nome, telefone: w.telefone || '—',

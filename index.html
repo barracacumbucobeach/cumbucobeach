@@ -25,6 +25,7 @@
 <meta name="theme-color" content="#12303F"/>
 
 <style>
+
   @keyframes cbDrift { 0%{transform:translate3d(0,0,0) scale(1)} 50%{transform:translate3d(4%,-3%,0) scale(1.12)} 100%{transform:translate3d(0,0,0) scale(1)} }
   @keyframes cbDrift2 { 0%{transform:translate3d(0,0,0) scale(1.05)} 50%{transform:translate3d(-5%,4%,0) scale(1)} 100%{transform:translate3d(0,0,0) scale(1.05)} }
   @keyframes cbFloat { 0%{transform:translateY(0)} 50%{transform:translateY(-14px)} 100%{transform:translateY(0)} }
@@ -39,11 +40,12 @@
 </helmet>
 <dc-import name="SiteHeader" hint-size="100%,72px"></dc-import>
 <main>
-  <section aria-label="Destaque" style="position:relative;overflow:hidden;background:#0E3A4F;isolation:isolate">
+  <section aria-label="Destaque" style="position:relative;overflow:hidden;background:#0E3A4F url('./assets/images/hero/hero-fundo-v3.jpeg') center center / cover no-repeat;isolation:isolate">
     <div aria-hidden="true" style="position:absolute;top:-30%;left:-15%;width:70vw;height:70vw;max-width:900px;max-height:900px;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(27,106,138,.85),rgba(27,106,138,0) 68%);filter:blur(20px);animation:cbDrift 22s ease-in-out infinite"></div>
     <div aria-hidden="true" style="position:absolute;bottom:-35%;right:-10%;width:60vw;height:60vw;max-width:820px;max-height:820px;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(233,106,43,.6),rgba(233,106,43,0) 70%);filter:blur(24px);animation:cbDrift2 26s ease-in-out infinite"></div>
     <div aria-hidden="true" style="position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.035) 0 1px,transparent 1px 16px)"></div>
-    <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,58,79,.2) 0%,rgba(14,58,79,.55) 60%,#0E3A4F 100%)"></div>
+    <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,58,79,.62) 0%,rgba(14,58,79,.78) 60%,#0E3A4F 100%)"></div>
+    <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(100deg,rgba(14,58,79,.94) 0%,rgba(14,58,79,.82) 34%,rgba(14,58,79,.12) 66%,rgba(14,58,79,0) 100%)"></div>
     <svg aria-hidden="true" viewBox="0 0 1440 120" preserveAspectRatio="none" style="position:absolute;left:0;right:0;bottom:-1px;width:100%;height:clamp(46px,6vw,88px);display:block;z-index:1"><path fill="#F7EEDA" d="M0,72 C220,124 430,8 700,40 C940,68 1180,124 1440,64 L1440,120 L0,120 Z"></path></svg>
 
     <div style="position:relative;max-width:1240px;margin:0 auto;padding:clamp(44px,7vw,92px) 20px clamp(52px,8vw,104px);display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(30px,5vw,64px);align-items:center">

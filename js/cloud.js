@@ -166,6 +166,7 @@
     envolver('updateReservation', function (r) { return r ? empurrarReserva(r) : null; });
     envolver('setStatus', function (r) { return r ? empurrarReserva(r) : null; });
     envolver('deleteReservation', function (_, args) { return sb.from('reservas').delete().eq('id', args[0]); });
+    envolver('deleteCustomer', function (_, args) { return sb.from('clientes').delete().eq('id', args[0]); });
     envolver('saveBlock', function (b) {
       return sb.from('bloqueios').upsert({ id: b.id, data: b.data, ambiente_id: b.ambienteId || null, hora_inicio: b.horaInicio || null, hora_fim: b.horaFim || null, motivo: b.motivo || 'Período bloqueado' });
     });
