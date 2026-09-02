@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="referrer" content="strict-origin-when-cross-origin"/>
+<title>Reservas — Barraca Cumbuco Beach</title>
+<script src="./js/supabase-config.js"></script>
+<script src="./js/storage.js"></script>
+<script src="./js/cloud.js"></script>
+<script src="./js/whatsapp.js"></script>
+</helmet>
+<div class="cb-shell" style="display:flex;align-items:stretch;min-height:100vh">
+  <div class="cb-sidemount" style="width:262px;flex:0 0 262px;background:#16506A;align-self:stretch">
+    <dc-import name="AdminSidebar" active="Reservas" hint-size="100%,100vh"></dc-import>
+  </div>
+  <main style="flex:1;min-width:0;padding:clamp(20px,3vw,38px)">
+    <header style="display:flex;flex-wrap:wrap;gap:14px;align-items:end;justify-content:space-between;margin-bottom:22px">
+      <div>
+        <div style="font-size:11px;letter-spacing:.16em;color:#1B6A8A;font-weight:600">RESERVAS</div>
+        <h1 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:clamp(24px,3.6vw,36px);margin:8px 0 0;color:#12303F">Gerenciar reservas</h1>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" onClick="{{ exportarCsv }}" style="cursor:pointer;background:#fff;border:1px solid rgba(22,80,106,.25);color:#12303F;padding:13px 20px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#EFEAE0">EXPORTAR CSV</button>
+        <button type="button" onClick="{{ abrirNova }}" style="cursor:pointer;border:0;background:#16506A;color:#F7EEDA;padding:13px 20px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#1B6A8A">NOVA RESERVA</button>
+      </div>
+    </header>
+
+    <section aria-label="Filtros" style="background:#fff;border:1px solid rgba(22,80,106,.12);border-radius:16px;padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">DATA
+        <input type="date" value="{{ fData }}" onChange="{{ setFData }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;color:#12303F"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">STATUS
+        <select value="{{ fStatus }}" onChange="{{ setFStatus }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;color:#12303F">
+          <option value="">Todos</option>
+          <sc-for list="{{ statusList }}" as="s" hint-placeholder-count="0"><option value="{{ s }}">{{ s }}</option></sc-for>
+        </select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">AMBIENTE
+        <select value="{{ fAmbiente }}" onChange="{{ setFAmbiente }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;color:#12303F">
+          <option value="">Todos</option>
+          <sc-for list="{{ ambientes }}" as="a" hint-placeholder-count="0"><option value="{{ a.id }}">{{ a.nome }}</option></sc-for>
+        </select>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">NOME
+        <input type="text" value="{{ fNome }}" onChange="{{ setFNome }}" placeholder="Buscar" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px"/>
+      </label>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">TELEFONE
+        <input type="text" value="{{ fTelefone }}" onChange="{{ setFTelefone }}" placeholder="Buscar" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px"/>
+      </label>
+      <div style="display:flex;align-items:end">
+        <button type="button" onClick="{{ limparFiltros }}" style="cursor:pointer;width:100%;background:#F7EEDA;border:1px solid rgba(22,80,106,.18);color:#12303F;padding:11px;border-radius:9px;font-size:12px;font-weight:700" style-hover="background:#EFEAE0">LIMPAR</button>
+      </div>
+    </section>
+
+    <div role="group" aria-label="Filtrar por status" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
+      <sc-for list="{{ abas }}" as="a" hint-placeholder-count="5">
+        <button type="button" onClick="{{ a.ir }}" aria-pressed="{{ a.ativo }}" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;background:{{ a.bg }};border:1px solid {{ a.borda }};color:{{ a.cor }};padding:10px 15px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.07em" style-hover="filter:brightness(.97)">{{ a.label }}<span style="background:{{ a.pilulaBg }};color:{{ a.pilulaCor }};border-radius:999px;padding:2px 8px;font-size:11px">{{ a.n }}</span></button>
+      </sc-for>
+    </div>
+
+    <p style="margin:14px 0 10px;font-size:13px;color:#5A6B75">{{ contagem }}</p>
+
+    <div style="background:#fff;border:1px solid rgba(22,80,106,.12);border-radius:16px;overflow:auto">
+      <table>
+        <thead>
+          <tr style="background:#F7EEDA">
+            <sc-for list="{{ colunas }}" as="c" hint-placeholder-count="9">
+              <th scope="col" style="text-align:left;font-size:10px;letter-spacing:.1em;color:#5A6B75;padding:13px 14px;white-space:nowrap">{{ c }}</th>
+            </sc-for>
+          </tr>
+        </thead>
+        <tbody>
+          <sc-for list="{{ linhas }}" as="r" hint-placeholder-count="5">
+            <tr style="border-top:1px solid rgba(22,80,106,.09)">
+              <td style="padding:13px 14px;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#12303F;white-space:nowrap">{{ r.codigo }}</td>
+              <td style="padding:13px 14px;font-size:14px;font-weight:600;color:#12303F">{{ r.nome }}</td>
+              <td style="padding:13px 14px;font-size:13px;color:#3E525C;white-space:nowrap">{{ r.telefone }}</td>
+              <td style="padding:13px 14px;font-size:13px;color:#3E525C;white-space:nowrap">{{ r.data }}</td>
+              <td style="padding:13px 14px;font-size:13px;color:#3E525C">{{ r.hora }}</td>
+              <td style="padding:13px 14px;font-size:13px;color:#3E525C">{{ r.pessoas }}</td>
+              <td style="padding:13px 14px;font-size:13px;color:#3E525C">{{ r.ambiente }}</td>
+              <td style="padding:13px 14px"><span style="font-size:10px;font-weight:700;letter-spacing:.06em;padding:6px 9px;border-radius:999px;color:#fff;white-space:nowrap;background:{{ r.cor }}">{{ r.status }}</span></td>
+              <td style="padding:10px 14px">
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button type="button" onClick="{{ r.ver }}" style="cursor:pointer;background:#DDEDE9;border:1px solid rgba(27,106,138,.3);color:#1B6A8A;padding:8px 11px;border-radius:8px;font-size:11px;font-weight:700" style-hover="background:#D4E9E4">CONFIRMAR</button>
+                  <button type="button" onClick="{{ r.checkin }}" title="{{ r.dicaCheckin }}" style="cursor:pointer;background:#F1E4D2;border:1px solid rgba(233,106,43,.4);color:#A6501C;padding:8px 11px;border-radius:8px;font-size:11px;font-weight:700" style-hover="background:#EBD9C0">{{ r.labelCheckin }}</button>
+                  <button type="button" onClick="{{ r.cancelar }}" style="cursor:pointer;background:#FBEFEE;border:1px solid rgba(155,59,52,.3);color:#9B3B34;padding:8px 11px;border-radius:8px;font-size:11px;font-weight:700" style-hover="background:#F6E1DF">RESERVA CANCELADA</button>
+                  <button type="button" onClick="{{ r.excluir }}" style="cursor:pointer;background:#fff;border:1px solid rgba(155,59,52,.45);color:#9B3B34;padding:8px 11px;border-radius:8px;font-size:11px;font-weight:700" style-hover="background:#FBEFEE">{{ r.labelExcluir }}</button>
+                </div>
+              </td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+      <sc-if value="{{ vazio }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0;padding:26px;text-align:center;font-size:14px;color:#5A6B75">Nenhuma reserva encontrada com esses filtros.</p>
+      </sc-if>
+    </div>
+  </main>
+</div>
+
+<sc-if value="{{ modal }}" hint-placeholder-val="{{ false }}">
+  <div role="dialog" aria-modal="true" aria-label="Detalhes da reserva" style="position:fixed;inset:0;background:rgba(18,48,63,.55);display:flex;align-items:center;justify-content:center;padding:18px;z-index:80">
+    <div style="background:#FDF8EC;border-radius:20px;width:100%;max-width:620px;max-height:90vh;overflow:auto;padding:clamp(20px,3vw,30px);box-shadow:0 26px 60px rgba(0,0,0,.3)">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:start">
+        <div>
+          <div style="font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#1B6A8A">{{ mCodigo }}</div>
+          <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:24px;margin:6px 0 0;color:#12303F">{{ mNome }}</h2>
+        </div>
+        <button type="button" onClick="{{ fechar }}" aria-label="Fechar" style="cursor:pointer;background:transparent;border:1px solid rgba(22,80,106,.2);border-radius:9px;width:38px;height:38px;font-size:16px;color:#12303F" style-hover="background:rgba(22,80,106,.07)">✕</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:22px">
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">NOME
+          <input type="text" value="{{ eNome }}" onChange="{{ setENome }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff"/>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">WHATSAPP
+          <input type="tel" value="{{ eTelefone }}" onChange="{{ setETelefone }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff"/>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">DATA
+          <input type="date" value="{{ eData }}" onChange="{{ setEData }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F"/>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">HORA
+          <select value="{{ eHora }}" onChange="{{ setEHora }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F">
+            <sc-for list="{{ horarios }}" as="h" hint-placeholder-count="0"><option value="{{ h }}">{{ h }}</option></sc-for>
+          </select>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">PESSOAS
+          <input type="number" min="1" value="{{ ePessoas }}" onChange="{{ setEPessoas }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff"/>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">AMBIENTE
+          <select value="{{ eAmbiente }}" onChange="{{ setEAmbiente }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F">
+            <sc-for list="{{ ambientes }}" as="a" hint-placeholder-count="0"><option value="{{ a.id }}">{{ a.nome }}</option></sc-for>
+          </select>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">STATUS
+          <select value="{{ eStatus }}" onChange="{{ setEStatus }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F">
+            <sc-for list="{{ statusList }}" as="s" hint-placeholder-count="0"><option value="{{ s }}">{{ s }}</option></sc-for>
+          </select>
+        </label>
+      </div>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F;margin-top:12px">OBSERVAÇÕES
+        <textarea rows="3" value="{{ eObs }}" onChange="{{ setEObs }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;resize:vertical"></textarea>
+      </label>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px">
+        <button type="button" onClick="{{ salvar }}" style="cursor:pointer;border:0;background:#16506A;color:#F7EEDA;padding:13px 20px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#1B6A8A">SALVAR ALTERAÇÕES</button>
+        <button type="button" onClick="{{ checkinModal }}" title="{{ dicaCheckinModal }}" style="cursor:pointer;background:#F1E4D2;border:1px solid rgba(233,106,43,.4);color:#A6501C;padding:13px 20px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#EBD9C0">{{ labelCheckinModal }}</button>
+        <a href="{{ linkAviso }}" onClick="{{ abrirAviso }}" target="_blank" rel="noopener" style="background:#1FA855;color:#fff;padding:13px 20px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#178F47;color:#fff">CONFIRMAR RESERVA POR WHATSAPP</a>
+        <a href="{{ linkConversa }}" target="_blank" rel="noopener" style="background:#fff;border:1px solid rgba(31,168,85,.5);color:#178F47;padding:13px 20px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#EFF9F2;color:#178F47">FALAR COM O CLIENTE</a>
+        <button type="button" onClick="{{ excluir }}" style="cursor:pointer;background:#fff;border:1px solid rgba(155,59,52,.4);color:#9B3B34;padding:13px 20px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#FBEFEE">EXCLUIR</button>
+      </div>
+
+      <h3 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:16px;margin:26px 0 12px;color:#12303F">Histórico</h3>
+      <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ historico }}" as="h" hint-placeholder-count="2">
+          <li style="border-left:2px solid #E96A2B;padding:2px 0 2px 12px">
+            <div style="font-size:11px;color:#78888F;font-family:ui-monospace,Menlo,monospace">{{ h.em }}</div>
+            <div style="font-size:14px;color:#12303F">{{ h.texto }}</div>
+          </li>
+        </sc-for>
+      </ul>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ modalNova }}" hint-placeholder-val="{{ false }}">
+  <div role="dialog" aria-modal="true" aria-label="Nova reserva por telefone" style="position:fixed;inset:0;background:rgba(18,48,63,.55);display:flex;align-items:center;justify-content:center;padding:18px;z-index:80">
+    <div style="background:#FDF8EC;border-radius:20px;width:100%;max-width:560px;max-height:90vh;overflow:auto;padding:clamp(20px,3vw,30px);box-shadow:0 26px 60px rgba(0,0,0,.3)">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:start">
+        <div>
+          <div style="font-size:11px;letter-spacing:.14em;color:#E96A2B;font-weight:700">ATENDIMENTO POR TELEFONE</div>
+          <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:24px;margin:6px 0 0;color:#12303F">Nova reserva rápida</h2>
+        </div>
+        <button type="button" onClick="{{ fecharNova }}" aria-label="Fechar" style="cursor:pointer;border:0;background:rgba(22,80,106,.1);color:#12303F;width:36px;height:36px;border-radius:50%;font-size:17px">✕</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px">
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F;grid-column:1/-1">NOME DO CLIENTE
+          <input type="text" value="{{ nNome }}" onChange="{{ setNNome }}" placeholder="Nome completo" style="font:inherit;font-size:15px;padding:12px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">WHATSAPP
+          <input type="tel" value="{{ nTelefone }}" onChange="{{ setNTelefone }}" placeholder="(85) 99999-9999" style="font:inherit;font-size:15px;padding:12px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">PESSOAS
+          <input type="number" min="1" value="{{ nPessoas }}" onChange="{{ setNPessoas }}" style="font:inherit;font-size:15px;padding:12px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">DATA
+          <input type="date" value="{{ nData }}" onChange="{{ setNData }}" style="font:inherit;font-size:15px;padding:12px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F" />
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">HORÁRIO
+          <select value="{{ nHora }}" onChange="{{ setNHora }}" style="font:inherit;font-size:15px;padding:12px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F">
+            <sc-for list="{{ horarios }}" as="h" hint-placeholder-count="4"><option value="{{ h }}">{{ h }}</option></sc-for>
+          </select>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F;grid-column:1/-1">AMBIENTE
+          <select value="{{ nAmbiente }}" onChange="{{ setNAmbiente }}" style="font:inherit;font-size:15px;padding:12px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F">
+            <sc-for list="{{ ambientes }}" as="a" hint-placeholder-count="4"><option value="{{ a.id }}">{{ a.nome }}</option></sc-for>
+          </select>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F;grid-column:1/-1">OBSERVAÇÕES
+          <input type="text" value="{{ nObs }}" onChange="{{ setNObs }}" placeholder="Opcional" style="font:inherit;font-size:15px;padding:12px;border:1px solid rgba(22,80,106,.22);border-radius:9px;background:#fff;color:#12303F" />
+        </label>
+      </div>
+
+      <p style="margin:14px 0 0;font-size:13px;color:#5A6B75">{{ nAviso }}</p>
+
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:18px">
+        <button type="button" onClick="{{ criarConfirmada }}" style="cursor:pointer;border:0;background:#16506A;color:#F7EEDA;padding:14px 22px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#1B6A8A">CRIAR JÁ CONFIRMADA</button>
+        <button type="button" onClick="{{ criarPendente }}" style="cursor:pointer;background:#fff;border:1px solid rgba(22,80,106,.25);color:#12303F;padding:14px 22px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#EFEAE0">CRIAR COMO PENDENTE</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+  <div role="status" style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#12303F;color:#F7EEDA;padding:15px 22px;border-radius:999px;font-size:14px;font-weight:600;box-shadow:0 14px 34px rgba(0,0,0,.25);z-index:99;max-width:90vw;text-align:center">{{ toast }}</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    pronto: false, lista: [], ambientes: [], toast: '', armado: '',
+    f: { data: '', status: '', ambienteId: '', nome: '', telefone: '' },
+    sel: null, edit: {}, nova: null
+  };
+  /* abre direto a reserva indicada em ?reserva=CODIGO (vinda do dashboard) */
+  abrirPorCodigo() {
+    if (this._abriuPorCodigo) return;
+    const cod = new URLSearchParams(location.search).get('reserva');
+    if (!cod) return;
+    const r = window.CB.getReservationByCode(cod);
+    if (!r) return;
+    this._abriuPorCodigo = true;
+    this.abrir(r);
+  }
+
+  /* reserva rápida feita pelo atendente durante uma ligação */
+  novaVazia() {
+    const CB = window.CB, hs = CB.getTimeSlots(), amb = CB.getSpaces(true)[0];
+    return { nome: '', telefone: '', data: CB.todayISO(), hora: hs[0] || '', pessoas: 2, ambienteId: amb ? amb.id : '', observacoes: '' };
+  }
+  criar(status) {
+    const CB = window.CB, n = this.state.nova;
+    if (!n.nome.trim()) return this.toast('Informe o nome do cliente.');
+    if (CB.digits(n.telefone).length < 10) return this.toast('Informe um WhatsApp válido.');
+    if (!n.ambienteId) return this.toast('Escolha um ambiente.');
+    const r = CB.saveReservation(Object.assign({ email: '' }, n, { observacoes: (n.observacoes || '') + (n.observacoes ? ' · ' : '') + 'Reserva feita por telefone.' }));
+    if (status !== CB.STATUS.PENDENTE) CB.setStatus(r.id, status);
+    this.setState({ nova: null });
+    this.load();
+    this.toast('Reserva ' + r.codigo + ' criada.');
+  }
+  componentDidMount() {
+    const tick = () => {
+      if (!window.CB) return setTimeout(tick, 60);
+      if (!window.CB.requireAuth()) return;
+      this.setState({ pronto: true, ambientes: window.CB.getSpaces() }, () => {
+        this.load();
+        this.abrirPorCodigo();
+      });
+      window.CB.onChange(() => { this.load(); this.abrirPorCodigo(); });
+    };
+    tick();
+  }
+  load() {
+    const CB = window.CB, f = this.state.f;
+    // sem filtro de status, os atendimentos já concluídos não aparecem aqui
+    this.setState({ lista: CB.getReservations(Object.assign({ ocultarConcluidas: !f.status }, f)) });
+  }
+  setF(patch) { this.setState({ f: Object.assign({}, this.state.f, patch) }, () => this.load()); }
+  toast(t) {
+    this.setState({ toast: t });
+    clearTimeout(this._tt);
+    this._tt = setTimeout(() => this.setState({ toast: '' }), 3000);
+  }
+  abrir(r) {
+    this.setState({
+      sel: r,
+      edit: { nome: r.nome, telefone: r.telefone, data: r.data, hora: r.hora, pessoas: r.pessoas, ambienteId: r.ambienteId, status: r.status, observacoes: r.observacoes }
+    });
+  }
+  renderVals() {
+    const CB = window.CB, s = this.state, sel = s.sel, e = s.edit;
+    const setE = patch => this.setState({ edit: Object.assign({}, this.state.edit, patch) });
+    const n = s.nova || {};
+    const setN = patch => this.setState({ nova: Object.assign({}, this.state.nova, patch) });
+    let nAviso = '';
+    if (s.nova && CB && n.ambienteId) {
+      const d = CB.checkAvailability(n.data, n.hora, n.ambienteId, n.pessoas);
+      const livres = d.capacidade ? Math.max(0, d.capacidade - (d.ocupado || 0)) : null;
+      nAviso = d.ok
+        ? 'Lugares livres nesse horário: ' + (livres != null ? livres : 'sem limite definido') + '.'
+        : 'Atenção: ' + d.motivo + (livres != null ? ' Restam ' + livres + ' lugar(es).' : '');
+    }
+    return {
+      statusList: CB ? CB.STATUS_LIST : [],
+      ambientes: s.ambientes.map(a => ({ id: a.id, nome: a.nome })),
+      horarios: CB ? CB.getTimeSlots() : [],
+      colunas: ['CÓDIGO', 'CLIENTE', 'TELEFONE', 'DATA', 'HORA', 'PESSOAS', 'AMBIENTE', 'STATUS', 'AÇÕES'],
+      fData: s.f.data, fStatus: s.f.status, fAmbiente: s.f.ambienteId, fNome: s.f.nome, fTelefone: s.f.telefone,
+      setFData: ev => this.setF({ data: ev.target.value }),
+      setFStatus: ev => this.setF({ status: ev.target.value }),
+      setFAmbiente: ev => this.setF({ ambienteId: ev.target.value }),
+      setFNome: ev => this.setF({ nome: ev.target.value }),
+      setFTelefone: ev => this.setF({ telefone: ev.target.value }),
+      limparFiltros: () => this.setF({ data: '', status: '', ambienteId: '', nome: '', telefone: '' }),
+      contagem: s.lista.length + ' reserva(s) encontrada(s)',
+      vazio: s.pronto && s.lista.length === 0,
+      linhas: s.lista.map(r => ({
+        codigo: r.codigo, nome: r.nome, telefone: r.telefone, data: CB.fmtDate(r.data), hora: r.hora,
+        pessoas: String(r.pessoas), ambiente: CB.spaceName(r.ambienteId), status: r.status,
+        cor: CB.STATUS_COLOR[r.status] || '#4A5A5B',
+        ver: () => this.abrir(r),
+        // exclusão em dois toques: o primeiro clique arma, o segundo apaga
+        labelExcluir: s.armado === r.id ? 'CONFIRMAR EXCLUSÃO' : 'EXCLUIR',
+        excluir: () => {
+          if (s.armado !== r.id) {
+            clearTimeout(this._ta);
+            this.setState({ armado: r.id });
+            this._ta = setTimeout(() => this.setState({ armado: '' }), 6000);
+            return this.toast('Clique de novo em CONFIRMAR EXCLUSÃO para apagar ' + r.codigo + '.');
+          }
+          clearTimeout(this._ta);
+          CB.deleteReservation(r.id);
+          this.setState({ armado: '' });
+          this.load();
+          this.toast('Reserva ' + r.codigo + ' excluída.');
+        },
+        // chegada do cliente: check-in e, ao final do atendimento, conclusão
+        labelCheckin: r.status === CB.STATUS.CHEGOU ? 'CONCLUIR' : 'CHECK-IN',
+        dicaCheckin: r.status === CB.STATUS.CHEGOU
+          ? 'Clique para confirmar a saída do cliente.'
+          : 'Marque a chegada do cliente.',
+        checkin: () => {
+          const chegou = r.status === CB.STATUS.CHEGOU;
+          CB.setStatus(r.id, chegou ? CB.STATUS.CONCLUIDA : CB.STATUS.CHEGOU);
+          this.load();
+          this.toast(chegou ? 'Atendimento concluído.' : 'Check-in feito: cliente chegou.');
+        },
+        cancelar: () => {
+          if (!confirm('Cancelar a reserva ' + r.codigo + '?')) return;
+          CB.setStatus(r.id, CB.STATUS.CANCELADA); this.load(); this.toast('Reserva cancelada.');
+        }
+      })),
+      abas: (() => {
+        const base = CB.getReservations({
+          data: s.f.data, ambienteId: s.f.ambienteId, nome: s.f.nome, telefone: s.f.telefone
+        });
+        const conta = st => base.filter(r => r.status === st).length;
+        const defs = [
+          ['NOVA RESERVA', CB.STATUS.PENDENTE, conta(CB.STATUS.PENDENTE)],
+          ['CONFIRMADAS', CB.STATUS.CONFIRMADA, conta(CB.STATUS.CONFIRMADA)],
+          ['CLIENTE CHEGOU', CB.STATUS.CHEGOU, conta(CB.STATUS.CHEGOU)],
+          ['CANCELADAS', CB.STATUS.CANCELADA, conta(CB.STATUS.CANCELADA)],
+          ['CONCLUÍDAS', CB.STATUS.CONCLUIDA, conta(CB.STATUS.CONCLUIDA)]
+        ];
+        return defs.map(([label, st, n]) => {
+          const ativo = (s.f.status || '') === st;
+          return {
+            label, n: String(n), ativo,
+            bg: ativo ? '#16506A' : '#fff',
+            borda: ativo ? '#16506A' : 'rgba(22,80,106,.2)',
+            cor: ativo ? '#F7EEDA' : '#12303F',
+            pilulaBg: ativo ? 'rgba(247,238,218,.22)' : '#F1E9DA',
+            pilulaCor: ativo ? '#F7EEDA' : '#5A6B75',
+            ir: () => this.setF({ status: st })
+          };
+        });
+      })(),
+      exportarCsv: () => { CB.exportCSV(s.lista); this.toast('CSV exportado.'); },
+      abrirNova: () => this.setState({ nova: this.novaVazia() }),
+      fecharNova: () => this.setState({ nova: null }),
+      modalNova: !!s.nova,
+      nNome: n.nome || '', nTelefone: n.telefone || '', nData: n.data || '', nHora: n.hora || '',
+      nPessoas: n.pessoas || 1, nAmbiente: n.ambienteId || '', nObs: n.observacoes || '',
+      setNNome: ev => setN({ nome: ev.target.value }),
+      setNTelefone: ev => setN({ telefone: CB.maskPhone(ev.target.value) }),
+      setNData: ev => setN({ data: ev.target.value }),
+      setNHora: ev => setN({ hora: ev.target.value }),
+      setNPessoas: ev => setN({ pessoas: parseInt(ev.target.value, 10) || 1 }),
+      setNAmbiente: ev => setN({ ambienteId: ev.target.value }),
+      setNObs: ev => setN({ observacoes: ev.target.value }),
+      nAviso: nAviso,
+      criarConfirmada: () => this.criar(CB.STATUS.CONFIRMADA),
+      criarPendente: () => this.criar(CB.STATUS.PENDENTE),
+      modal: !!sel,
+      mCodigo: sel ? sel.codigo : '', mNome: sel ? sel.nome : '',
+      eNome: e.nome || '', eTelefone: e.telefone || '', eData: e.data || '', eHora: e.hora || '',
+      ePessoas: e.pessoas || 1, eAmbiente: e.ambienteId || '', eStatus: e.status || '', eObs: e.observacoes || '',
+      setENome: ev => setE({ nome: ev.target.value }),
+      setETelefone: ev => setE({ telefone: CB.maskPhone(ev.target.value) }),
+      setEData: ev => setE({ data: ev.target.value }),
+      setEHora: ev => setE({ hora: ev.target.value }),
+      setEPessoas: ev => setE({ pessoas: parseInt(ev.target.value, 10) || 1 }),
+      setEAmbiente: ev => setE({ ambienteId: ev.target.value }),
+      setEStatus: ev => setE({ status: ev.target.value }),
+      setEObs: ev => setE({ observacoes: ev.target.value }),
+      historico: sel ? (sel.historico || []).slice().reverse().map(h => ({ em: CB.fmtStamp(h.em), texto: h.texto })) : [],
+      fechar: () => this.setState({ sel: null }),
+      labelCheckinModal: (sel && sel.status === CB.STATUS.CHEGOU) ? 'CONCLUIR ATENDIMENTO' : 'FAZER CHECK-IN',
+      dicaCheckinModal: (sel && sel.status === CB.STATUS.CHEGOU)
+        ? 'Clique para confirmar a saída do cliente.'
+        : 'Marque a chegada do cliente.',
+      checkinModal: () => {
+        const chegou = sel.status === CB.STATUS.CHEGOU;
+        const novo = chegou ? CB.STATUS.CONCLUIDA : CB.STATUS.CHEGOU;
+        CB.setStatus(sel.id, novo);
+        this.load();
+        this.setState({ sel: null });
+        this.toast(chegou ? 'Atendimento concluído.' : 'Check-in feito: cliente chegou.');
+      },
+      salvar: () => {
+        const mudouStatus = sel.status !== e.status;
+        CB.updateReservation(sel.id, e, 'Reserva editada no painel');
+        if (mudouStatus) CB.setStatus(sel.id, e.status);
+        this.load();
+        this.setState({ sel: null });
+        this.toast('Reserva atualizada com sucesso.');
+      },
+      excluir: () => {
+        if (!confirm('Excluir definitivamente a reserva ' + sel.codigo + '?')) return;
+        CB.deleteReservation(sel.id);
+        this.load();
+        this.setState({ sel: null });
+        this.toast('Reserva excluída.');
+      },
+      linkAviso: (sel && window.CBWhats) ? (() => {
+        const st = CB.getSettings();
+        const texto = e.status === CB.STATUS.CANCELADA ? st.msgCancelamento : st.msgConfirmacao;
+        const r = Object.assign({}, sel, e);
+        return window.CBWhats.link(window.CBWhats.mensagemStatus(r, texto), window.CBWhats.numeroCliente(r.telefone));
+      })() : '#',
+      // conversa direta, sem mensagem pronta e sem mudar o status
+      linkConversa: (sel && window.CBWhats)
+        ? window.CBWhats.linkConversa(window.CBWhats.numeroCliente(sel.telefone)) : '#',
+      abrirAviso: ev => {
+        if (!sel || !window.CBWhats) return;
+        // o aviso ao cliente já confirma a reserva no sistema
+        if (sel.status === CB.STATUS.PENDENTE && e.status === CB.STATUS.PENDENTE) {
+          CB.setStatus(sel.id, CB.STATUS.CONFIRMADA);
+          this.load();
+          this.toast('Reserva confirmada. Enviando a mensagem ao cliente…');
+        }
+        const st = CB.getSettings();
+        const texto = e.status === CB.STATUS.CANCELADA ? st.msgCancelamento : st.msgConfirmacao;
+        const r = Object.assign({}, sel, e);
+        const url = window.CBWhats.link(window.CBWhats.mensagemStatus(r, texto), window.CBWhats.numeroCliente(r.telefone));
+        ev.preventDefault();
+        if (!window.CBWhats.abrirSeguro(url)) {
+          if (navigator.clipboard) navigator.clipboard.writeText(window.CBWhats.mensagemStatus(r, texto));
+          this.toast('O navegador bloqueou a janela. A mensagem foi copiada para você colar no WhatsApp.');
+        }
+      },
+      toast: s.toast
+    };
+  }
+}
+
+</script>
+</body>
+</html>

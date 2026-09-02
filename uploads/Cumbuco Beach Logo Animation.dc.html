@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  html, body { margin: 0; padding: 0; background: #07161E; }
+  a { color: #F18818; text-decoration: none; }
+  a:hover { color: #E74523; }
+  img { user-select: none; }
+</style>
+<script>window.OM_SCENES = '[{"name":"Ignite","dur":2.2,"desc":"The sun disc pops up out of the dark and the rays fan out and start their slow spin"},{"name":"Wave","dur":1.8,"desc":"The teal and orange wave rolls in from the left with liquid distortion"},{"name":"Wordmark","dur":2.6,"desc":"CUMBUCO then BEACH letters rise letter by letter in a wave and keep rippling"},{"name":"Shine","dur":2.4,"desc":"The full lockup breathes and glows, then fades back to black for the loop"}]';</script>
+<script>window.OM_PLAYBACK = '{"mode":"loop"}';</script>
+</helmet>
+<x-import component-from-global-scope="CumbucoLogoAnim" from="./animations-v3.jsx ./cumbuco.jsx" spin-speed="{{ spinSpeed }}" glow="{{ glow }}" hint-size="100%,100%"></x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;spinSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;glow&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0,&quot;max&quot;:2,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;motionEditor&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      spinSpeed: this.props.spinSpeed ?? 1,
+      glow: this.props.glow ?? 1,
+    };
+  }
+}
+</script>
+</body>
+</html>

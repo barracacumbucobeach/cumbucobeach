@@ -1,0 +1,2 @@
+Coloque aqui as fotos de cada ambiente e informe o caminho no painel (Ambientes > IMAGEM).
+Ex.: assets/images/ambientes/tendas-praia.jpg

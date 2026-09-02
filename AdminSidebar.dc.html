@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="referrer" content="strict-origin-when-cross-origin"/>
+<link rel="icon" href="./assets/logo/favicon.png"/>
+<script src="./js/alerta.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  html,body{margin:0;padding:0;background:#EFF2F4;color:#12303F;font-family:'Instrument Sans',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  a{color:#1B6A8A;text-decoration:none}
+  a:hover{color:#E96A2B}
+  :focus-visible{outline:3px solid #E96A2B;outline-offset:2px}
+  table{border-collapse:collapse;width:100%}
+  input,select,textarea,button{font-family:inherit}
+  .cb-sideburger{display:none}
+  .cb-sidemount>*{height:100%}
+  @media (max-width:920px){
+    .cb-shell{flex-direction:column !important}
+    .cb-sidemount{width:100% !important;flex:none !important;position:static !important}
+    .cb-side{position:static !important;height:auto !important;min-height:0 !important}
+    .cb-sidenav[data-open="false"]{display:none !important}
+    .cb-sideburger{display:inline-flex !important}
+  }
+</style>
+</helmet>
+<aside class="cb-side" style="position:sticky;top:0;height:100vh;background:#16506A;color:#D8E6E2;display:flex;flex-direction:column;gap:6px;padding:20px 16px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 4px 14px;border-bottom:1px solid rgba(247,238,218,.16)">
+    <div>
+      <span style="display:inline-flex;background:#F7EEDA;padding:10px 14px;border-radius:12px"><img src="./assets/logo/logo.png" alt="Barraca Cumbuco Beach" style="height:52px;width:auto;display:block"/></span>
+      <div style="font-size:10px;letter-spacing:.16em;color:#E96A2B;font-weight:600;margin-top:8px">PAINEL ADMINISTRATIVO</div>
+    </div>
+    <button class="cb-sideburger" type="button" aria-label="Abrir menu do painel" onClick="{{ toggle }}" style="width:42px;height:42px;align-items:center;justify-content:center;border:1px solid rgba(247,238,218,.3);border-radius:10px;background:transparent;cursor:pointer">
+      <span style="display:block;width:18px;height:2px;background:#F7EEDA;box-shadow:0 -6px 0 #F7EEDA,0 6px 0 #F7EEDA"></span>
+    </button>
+  </div>
+  <nav class="cb-sidenav" data-open="{{ aberto }}" aria-label="Navegação do painel" style="display:flex;flex-direction:column;gap:3px;margin-top:10px">
+    <sc-for list="{{ itens }}" as="i" hint-placeholder-count="8">
+      <a href="{{ i.href }}" style="display:block;padding:12px 14px;border-radius:10px;font-size:14px;font-weight:600;color:{{ i.cor }};background:{{ i.fundo }}" style-hover="background:rgba(247,238,218,.12);color:#F7EEDA">{{ i.label }}</a>
+    </sc-for>
+  </nav>
+  <div class="cb-sidenav" data-open="{{ aberto }}" style="margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:16px">
+    <button type="button" onClick="{{ alternarAviso }}" aria-pressed="{{ avisoOn }}" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(247,238,218,.08);border:1px solid rgba(247,238,218,.22);color:#F7EEDA;padding:11px 13px;border-radius:10px;font-size:12px;font-weight:600;text-align:left" style-hover="background:rgba(247,238,218,.16)">
+      <span>Aviso de reserva nova</span>
+      <span style="font-size:10px;letter-spacing:.1em;color:{{ avisoCor }}">{{ avisoLabel }}</span>
+    </button>
+    <a href="index.dc.html" style="font-size:13px;color:rgba(247,238,218,.7)">← Ver site público</a>
+    <button type="button" onClick="{{ sair }}" style="cursor:pointer;background:transparent;border:1px solid rgba(247,238,218,.3);color:#F7EEDA;padding:11px;border-radius:10px;font-size:13px;font-weight:600" style-hover="background:rgba(247,238,218,.12)">SAIR</button>
+  </div>
+</aside>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:280,&quot;height&quot;:640},&quot;active&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { aberto: false, aviso: true };
+  componentDidMount() {
+    const ler = () => this.setState({ aviso: !window.CBAlerta || window.CBAlerta.somLigado() });
+    ler();
+    setTimeout(ler, 800);
+  }
+  renderVals() {
+    const ativo = this.props.active || '';
+    const base = [
+      ['Dashboard', 'admin.dc.html'],
+      ['Reservas', 'admin-reservas.dc.html'],
+      ['Calendário', 'admin-calendario.dc.html'],
+      ['Ambientes', 'admin-ambientes.dc.html'],
+      ['Clientes', 'admin-clientes.dc.html'],
+      ['Relatórios', 'admin-relatorios.dc.html'],
+      ['Configurações', 'admin-configuracoes.dc.html']
+    ];
+    return {
+      aberto: this.state.aberto ? 'true' : 'false',
+      avisoOn: this.state.aviso ? 'true' : 'false',
+      avisoLabel: this.state.aviso ? 'LIGADO' : 'DESLIGADO',
+      avisoCor: this.state.aviso ? '#7FD1B9' : 'rgba(247,238,218,.5)',
+      alternarAviso: () => {
+        const novo = !this.state.aviso;
+        if (window.CBAlerta) {
+          window.CBAlerta.alternarSom(novo);
+          if (novo) { window.CBAlerta.pedirPermissao(); window.CBAlerta.tocar(); }
+        }
+        this.setState({ aviso: novo });
+      },
+      toggle: () => this.setState(s => ({ aberto: !s.aberto })),
+      sair: () => { if (window.CB) { window.CB.logout(); location.href = 'admin-login.dc.html'; } },
+      itens: base.map(([label, href]) => ({
+        label, href,
+        cor: label === ativo ? '#16506A' : '#D8E6E2',
+        fundo: label === ativo ? '#F7EEDA' : 'transparent'
+      }))
+    };
+  }
+}
+
+</script>
+</body>
+</html>

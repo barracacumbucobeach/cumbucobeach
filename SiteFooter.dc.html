@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<footer style="position:relative;background:#16506A;color:#D8E6E2;margin-top:0">
+  <div aria-hidden="true" style="height:6px;background:#E96A2B"></div>
+  <div style="max-width:1240px;margin:0 auto;padding:56px 20px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:36px">
+    <div>
+      <div style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:22px;font-weight:800;color:#F7EEDA;line-height:1.2">BARRACA<br>CUMBUCO BEACH</div>
+      <p style="margin:14px 0 0;font-size:14px;line-height:1.7;color:rgba(247,238,218,.7);max-width:30ch">Reserve seu ambiente e aproveite o melhor do Cumbuco.</p>
+    </div>
+    <div>
+      <div style="font-size:12px;letter-spacing:.14em;color:#E96A2B;font-weight:600;margin-bottom:14px">ENDEREÇO</div>
+      <p style="margin:0;font-size:15px;line-height:1.7">Av. Central, 49 - Tabuba<br>Caucaia - CE, 61618-015</p>
+      <div style="font-size:12px;letter-spacing:.14em;color:#E96A2B;font-weight:600;margin:20px 0 8px">HORÁRIO</div>
+      <p style="margin:0;font-size:15px;line-height:1.7">Todos os dias<br>09:00 às 17:00</p>
+    </div>
+    <div>
+      <div style="font-size:12px;letter-spacing:.14em;color:#E96A2B;font-weight:600;margin-bottom:14px">CONTATO</div>
+      <p style="margin:0;font-size:15px;line-height:1.7">WhatsApp<br><a href="{{ whatsLink }}" target="_blank" rel="noopener" style="color: rgb(247, 238, 218); text-decoration: underline;">{{ whatsTexto }}</a></p>
+    </div>
+    <div>
+      <div style="font-size:12px;letter-spacing:.14em;color:#E96A2B;font-weight:600;margin-bottom:14px">NAVEGAÇÃO</div>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:15px">
+        <a href="ambientes.dc.html" style="color:#D8E6E2">Ambientes</a>
+        <a href="reservar.dc.html" style="color:#D8E6E2">Fazer reserva</a>
+        <a href="politica-privacidade.dc.html" style="color:#D8E6E2">Política de privacidade</a>
+        <a href="admin-login.dc.html" style="color:#D8E6E2">Área administrativa</a>
+      </div>
+    </div>
+  </div>
+  <div style="max-width:1240px;margin:0 auto;padding:18px 20px 40px;border-top:1px solid rgba(247,238,218,.16);display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;font-size:13px;color:rgba(247,238,218,.6)">
+    <span>© Barraca Cumbuco Beach</span>
+    <span>Seus dados serão utilizados exclusivamente para atendimento e gerenciamento da sua reserva.</span>
+  </div>
+</footer>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    const tick = () => {
+      if (!window.CB) return setTimeout(tick, 80);
+      this.forceUpdate();
+      window.CB.onChange(() => this.forceUpdate());
+    };
+    tick();
+  }
+  renderVals() {
+    const s = window.CB ? window.CB.getSettings() : null;
+    const texto = (s && s.whatsapp) || '(85) 98177-7390';
+    const numero = (s && s.whatsappNumero) || '5585981777390';
+    const link = window.CBWhats ? window.CBWhats.linkConversa(numero) : 'https://wa.me/' + numero;
+    return { whatsTexto: texto, whatsLink: link };
+  }
+}
+
+</script>
+</body>
+</html>
