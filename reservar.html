@@ -10,6 +10,20 @@
 <helmet>
 <meta name="referrer" content="strict-origin-when-cross-origin"/>
 <title>Fazer reserva — Barraca Cumbuco Beach</title>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Barraca Cumbuco Beach"/>
+<meta property="og:title" content="Fazer reserva — Barraca Cumbuco Beach"/>
+<meta property="og:description" content="Reserve sua mesa na Barraca Cumbuco Beach. Escolha o ambiente, a data e o horário — Av. Central, 49, Tabuba, Caucaia (CE)."/>
+<meta property="og:url" content="https://cumbucobeach.com.br/reservar.html"/>
+<meta property="og:image" content="https://cumbucobeach.com.br/assets/logo/link-preview.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:image:alt" content="Logo da Barraca Cumbuco Beach"/>
+<meta property="og:locale" content="pt_BR"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="description" content="Reserve sua mesa na Barraca Cumbuco Beach. Escolha o ambiente, a data e o horário — Av. Central, 49, Tabuba, Caucaia (CE)."/>
+<meta name="theme-color" content="#12303F"/>
+
 <script src="./js/supabase-config.js"></script>
 <script src="./js/storage.js"></script>
 <script src="./js/cloud.js"></script>
@@ -38,8 +52,8 @@
           <p style="margin:0 0 18px;color:#5A6B75;font-size:15px">Escolha a data, o horário e quantas pessoas vão.</p>
           <div style="background:#F1E4D2;border-left:4px solid #E96A2B;border-radius:12px;padding:15px 17px;margin-bottom:24px">
             <p style="margin:0;font-size:13px;font-weight:700;letter-spacing:.05em;color:#A6501C">HORÁRIOS DE RESERVA</p>
-            <p style="margin:7px 0 0;font-size:14px;line-height:1.6;color:#5A4534;text-wrap:pretty">As reservas vão das {{ horaAbre }} às {{ horaLimite }}. Depois desse horário, as vagas abrem novamente a partir das {{ horaAbre }} do dia seguinte — é assim que organizamos a chegada dos clientes e o atendimento da barraca.</p>
-            <p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:#5A4534;text-wrap:pretty">Precisa de um horário diferente ou tem um caso especial? Fale direto com a gente no <a href="{{ whatsUrlGeral }}" target="_blank" rel="noopener noreferrer" style="color:#A6501C;font-weight:700;text-decoration:underline">WhatsApp</a>.</p>
+            <p style="margin:7px 0 0;font-size:14px;line-height:1.6;color:#5A4534;text-wrap:pretty">Recebemos reservas das {{ horaAbre }} às {{ horaLimite }}. Assim conseguimos receber cada cliente com calma e preparar tudo com cuidado. Passado esse horário, os horários do dia seguinte já ficam disponíveis a partir das {{ horaAbre }}.</p>
+            <p style="margin:10px 0 0;font-size:14px;line-height:1.6;color:#5A4534;text-wrap:pretty">Precisa de um horário diferente ou quer combinar algo especial? É só chamar a gente no <a href="{{ whatsUrlGeral }}" target="_blank" rel="noopener noreferrer" style="color:#A6501C;font-weight:700;text-decoration:underline">WhatsApp</a> — vamos adorar ajudar.</p>
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px">
             <label style="display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:600;color:#12303F">Data
@@ -52,6 +66,9 @@
                   <option value="{{ h }}">{{ h }}</option>
                 </sc-for>
               </select>
+              <sc-if value="{{ semHorario }}" hint-placeholder-val="{{ false }}">
+                <span style="font-weight:400;font-size:13px;line-height:1.55;color:#A6501C">Os horários de hoje já passaram. Escolha a data de amanhã ou fale com a gente no WhatsApp.</span>
+              </sc-if>
             </label>
             <label style="display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:600;color:#12303F">Quantas pessoas?
               <input type="number" min="1" step="1" value="{{ fPessoas }}" onChange="{{ setPessoas }}" style="font:inherit;font-weight:400;padding:14px;border:1px solid rgba(22,80,106,.25);border-radius:12px;background:#fff;color:#12303F"/>
@@ -359,9 +376,15 @@ class Component extends DCLogic {
       // texto do aviso sempre igual à configuração real dos horários
       horaAbre: this.hh(CB && CB.getSettings().horaInicio, '09:00'),
       horaLimite: this.hh(CB && CB.getSettings().horaFim, '14:30'),
-      horarios: CB ? CB.getTimeSlots() : [],
+      horarios: CB ? CB.getTimeSlots(s.data) : [],
+      semHorario: !!(CB && s.data && CB.getTimeSlots(s.data).length === 0),
       fData: s.data, fHora: s.hora, fPessoas: s.pessoas, fNome: s.nome, fTelefone: s.telefone, fEmail: s.email, fObs: s.obs,
-      setData: e => this.setState({ data: e.target.value, erro: '' }),
+      setData: e => {
+        const d = e.target.value;
+        const livres = CB ? CB.getTimeSlots(d) : [];
+        // se o horário escolhido não existe mais nessa data, limpa a seleção
+        this.setState({ data: d, erro: '', hora: livres.indexOf(this.state.hora) < 0 ? '' : this.state.hora });
+      },
       setHora: e => this.setState({ hora: e.target.value, erro: '' }),
       setPessoas: e => this.setState({ pessoas: e.target.value.replace(/\D/g, '') === '' ? '' : parseInt(e.target.value, 10), erro: '' }),
       setNome: e => this.setState({ nome: e.target.value, erro: '' }),

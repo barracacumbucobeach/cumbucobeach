@@ -155,12 +155,20 @@
   function digits(v) { return String(v || '').replace(/\D/g, ''); }
 
   /* ---------- horários ---------- */
-  function getTimeSlots() {
+  /* Lista de horários. Passando a data, os horários que já passaram no dia de
+     hoje ficam de fora — o cliente só vê o que ainda é possível atender. */
+  function getTimeSlots(data) {
     var s = getSettings();
     var toMin = function (t) { var p = String(t).split(':'); return (+p[0]) * 60 + (+p[1] || 0); };
     var start = toMin(s.horaInicio || '09:00'), end = toMin(s.horaFim || '14:30'), step = Math.max(5, +s.intervalo || 30);
+    var min = -1;
+    if (data && data === todayISO()) {
+      var agora = new Date();
+      min = agora.getHours() * 60 + agora.getMinutes();
+    }
     var out = [];
     for (var m = start; m <= end; m += step) {
+      if (m <= min) continue;
       out.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'));
     }
     return out;
