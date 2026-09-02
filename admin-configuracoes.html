@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="referrer" content="strict-origin-when-cross-origin"/>
+<title>Configurações — Painel Barraca Cumbuco Beach</title>
+<script src="./js/supabase-config.js"></script>
+<script src="./js/storage.js"></script>
+<script src="./js/cloud.js"></script>
+</helmet>
+<div class="cb-shell" style="display:flex;align-items:stretch;min-height:100vh">
+  <div class="cb-sidemount" style="width:262px;flex:0 0 262px;background:#16506A;align-self:stretch">
+    <dc-import name="AdminSidebar" active="Configurações" hint-size="100%,100vh"></dc-import>
+  </div>
+  <main style="flex:1;min-width:0;padding:clamp(20px,3vw,38px)">
+    <header style="margin-bottom:22px">
+      <div style="font-size:11px;letter-spacing:.16em;color:#1B6A8A;font-weight:600">CONFIGURAÇÕES</div>
+      <h1 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:clamp(24px,3.6vw,36px);margin:8px 0 0;color:#12303F">Dados e regras do sistema</h1>
+    </header>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
+      <section style="background:#fff;border:1px solid rgba(22,80,106,.12);border-radius:18px;padding:22px">
+        <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:17px;margin:0 0 16px;color:#12303F">Estabelecimento</h2>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">NOME
+            <input type="text" value="{{ nome }}" onChange="{{ setNome }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px"/>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">ENDEREÇO
+            <input type="text" value="{{ endereco }}" onChange="{{ setEndereco }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px"/>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">WHATSAPP
+            <input type="text" value="{{ whatsapp }}" onChange="{{ setWhatsapp }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px"/>
+          </label>
+        </div>
+      </section>
+
+      <section style="background:#fff;border:1px solid rgba(22,80,106,.12);border-radius:18px;padding:22px">
+        <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:17px;margin:0 0 16px;color:#12303F">Horários de reserva</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px">
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">INICIAL
+            <input type="time" value="{{ horaInicio }}" onChange="{{ setHoraInicio }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;color:#12303F"/>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">FINAL
+            <input type="time" value="{{ horaFim }}" onChange="{{ setHoraFim }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;color:#12303F"/>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">INTERVALO (MIN)
+            <input type="number" min="5" step="5" value="{{ intervalo }}" onChange="{{ setIntervalo }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px"/>
+          </label>
+        </div>
+        <p style="margin:14px 0 0;font-size:12px;color:#5A6B75">Horários gerados: {{ previa }}</p>
+      </section>
+
+      <section style="background:#fff;border:1px solid rgba(22,80,106,.12);border-radius:18px;padding:22px">
+        <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:17px;margin:0 0 16px;color:#12303F">Mensagens</h2>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">CONFIRMAÇÃO
+            <textarea rows="3" value="{{ msgConfirmacao }}" onChange="{{ setMsgConfirmacao }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;resize:vertical"></textarea>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">CANCELAMENTO
+            <textarea rows="3" value="{{ msgCancelamento }}" onChange="{{ setMsgCancelamento }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;resize:vertical"></textarea>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:600;letter-spacing:.08em;color:#78888F">POLÍTICA DE RESERVA
+            <textarea rows="4" value="{{ politica }}" onChange="{{ setPolitica }}" style="font:inherit;font-size:14px;padding:11px;border:1px solid rgba(22,80,106,.22);border-radius:9px;resize:vertical"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <section style="background:#fff;border:1px solid rgba(22,80,106,.12);border-radius:18px;padding:22px">
+        <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:17px;margin:0 0 16px;color:#12303F">Acesso ao painel</h2>
+        <p style="margin:0;font-size:14px;line-height:1.7;color:#3E525C">O acesso ao painel é controlado pelo banco de dados (Supabase), em <strong>Authentication › Users</strong>. Nenhuma senha fica gravada no site nem no navegador.</p>
+        <ul style="margin:12px 0 0;padding-left:20px;font-size:14px;line-height:1.8;color:#3E525C">
+          <li>Para dar acesso a alguém: crie o usuário com e-mail e senha e marque como confirmado.</li>
+          <li>Para tirar o acesso: exclua o usuário. O efeito é imediato.</li>
+          <li>Para trocar a senha: use "Reset password" no próprio usuário.</li>
+        </ul>
+        <p style="margin:14px 0 0;font-size:12px;line-height:1.6;color:#1B6A8A;background:#DDEDE9;border-radius:9px;padding:11px">Ao sair do painel, o navegador apaga os dados de clientes guardados em cache. Em computador compartilhado, sempre use o botão SAIR.</p>
+      </section>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:20px">
+      <button type="button" onClick="{{ salvar }}" style="cursor:pointer;border:0;background:#16506A;color:#F7EEDA;padding:15px 24px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#1B6A8A">SALVAR CONFIGURAÇÕES</button>
+      <button type="button" onClick="{{ zerar }}" style="cursor:pointer;background:#fff;border:1px solid rgba(155,59,52,.4);color:#9B3B34;padding:15px 24px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#FBEFEE">APAGAR TODOS OS DADOS</button>
+    </div>
+  </main>
+</div>
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+  <div role="status" style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#12303F;color:#F7EEDA;padding:15px 22px;border-radius:999px;font-size:14px;font-weight:600;box-shadow:0 14px 34px rgba(0,0,0,.25);z-index:99">{{ toast }}</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { s: null, toast: '' };
+  componentDidMount() {
+    const tick = () => {
+      if (!window.CB) return setTimeout(tick, 60);
+      if (!window.CB.requireAuth()) return;
+      this.setState({ s: Object.assign({}, window.CB.getSettings()) });
+    };
+    tick();
+  }
+  set(patch) { this.setState({ s: Object.assign({}, this.state.s, patch) }); }
+  toast(t) {
+    this.setState({ toast: t });
+    clearTimeout(this._tt);
+    this._tt = setTimeout(() => this.setState({ toast: '' }), 3000);
+  }
+  renderVals() {
+    const CB = window.CB, s = this.state.s || {};
+    return {
+      nome: s.nome || '', endereco: s.endereco || '', whatsapp: s.whatsapp || '',
+      horaInicio: s.horaInicio || '', horaFim: s.horaFim || '', intervalo: s.intervalo || 30,
+      msgConfirmacao: s.msgConfirmacao || '', msgCancelamento: s.msgCancelamento || '', politica: s.politica || '',
+
+      setNome: e => this.set({ nome: e.target.value }),
+      setEndereco: e => this.set({ endereco: e.target.value }),
+      setWhatsapp: e => this.set({ whatsapp: CB.maskPhone(e.target.value) }),
+      setHoraInicio: e => this.set({ horaInicio: e.target.value }),
+      setHoraFim: e => this.set({ horaFim: e.target.value }),
+      setIntervalo: e => this.set({ intervalo: parseInt(e.target.value, 10) || 30 }),
+      setMsgConfirmacao: e => this.set({ msgConfirmacao: e.target.value }),
+      setMsgCancelamento: e => this.set({ msgCancelamento: e.target.value }),
+      setPolitica: e => this.set({ politica: e.target.value }),
+
+      previa: CB ? CB.getTimeSlots().slice(0, 6).join('  ') + ' …' : '',
+      toast: this.state.toast,
+      salvar: () => { CB.saveSettings(this.state.s); this.toast('Configurações salvas.'); },
+      zerar: () => {
+        if (!confirm('Isso apaga TODAS as reservas, clientes, ambientes e configurações deste navegador. Continuar?')) return;
+        CB.resetAll();
+        this.setState({ s: Object.assign({}, CB.getSettings()) });
+        this.toast('Dados apagados. Sistema restaurado ao padrão.');
+      }
+    };
+  }
+}
+
+</script>
+</body>
+</html>

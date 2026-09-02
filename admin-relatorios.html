@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="referrer" content="strict-origin-when-cross-origin"/>
+<title>Relatórios — Painel Barraca Cumbuco Beach</title>
+<script src="./js/supabase-config.js"></script>
+<script src="./js/storage.js"></script>
+<script src="./js/cloud.js"></script>
+</helmet>
+<div class="cb-shell" style="display:flex;align-items:stretch;min-height:100vh">
+  <div class="cb-sidemount" style="width:262px;flex:0 0 262px;background:#16506A;align-self:stretch">
+    <dc-import name="AdminSidebar" active="Relatórios" hint-size="100%,100vh"></dc-import>
+  </div>
+  <main style="flex:1;min-width:0;padding:clamp(20px,3vw,38px)">
+    <header style="display:flex;flex-wrap:wrap;gap:14px;align-items:end;justify-content:space-between;margin-bottom:22px">
+      <div>
+        <div style="font-size:11px;letter-spacing:.16em;color:#1B6A8A;font-weight:600">RELATÓRIOS</div>
+        <h1 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:clamp(24px,3.6vw,36px);margin:8px 0 0;color:#12303F">Indicadores de reservas</h1>
+      </div>
+      <button type="button" onClick="{{ exportarCsv }}" style="cursor:pointer;border:0;background:#16506A;color:#F7EEDA;padding:14px 22px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:.04em" style-hover="background:#1B6A8A">EXPORTAR CSV</button>
+    </header>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px">
+      <sc-for list="{{ cards }}" as="c" hint-placeholder-count="4">
+        <div style="background:#fff;border:1px solid rgba(22,80,106,.12);border-radius:16px;padding:20px">
+          <div style="font-size:11px;letter-spacing:.12em;color:#78888F;font-weight:600">{{ c.label }}</div>
+          <div style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:36px;font-weight:800;line-height:1.1;margin-top:10px;color:{{ c.cor }}">{{ c.valor }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-for list="{{ graficos }}" as="g" hint-placeholder-count="3">
+      <section style="background:#fff;border:1px solid rgba(22,80,106,.12);border-radius:18px;padding:22px;margin-top:18px">
+        <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:18px;margin:0 0 18px;color:#12303F">{{ g.titulo }}</h2>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <sc-for list="{{ g.barras }}" as="b" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="flex:0 0 40%;max-width:230px;font-size:13px;color:#3E525C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ b.chave }}</div>
+              <div style="flex:1;height:22px;background:#EFF2F4;border-radius:6px;overflow:hidden">
+                <div style="height:100%;width:{{ b.largura }};background:{{ g.cor }};border-radius:6px;transition:width .5s ease"></div>
+              </div>
+              <div style="flex:0 0 42px;text-align:right;font-size:13px;font-weight:700;color:#16506A">{{ b.valor }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ g.vazio }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;font-size:14px;color:#5A6B75">Sem dados registrados.</p>
+        </sc-if>
+      </section>
+    </sc-for>
+
+    <section style="background:#fff;border:1px solid rgba(22,80,106,.12);border-radius:18px;padding:22px;margin-top:18px">
+      <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:18px;margin:0 0 4px;color:#12303F">Permanência dos clientes</h2>
+      <p style="margin:0 0 18px;font-size:13px;color:#5A6B75">Horário de entrada e de saída registrados no check-in e na conclusão do atendimento.</p>
+      <div style="overflow:auto">
+        <table style="width:100%;border-collapse:collapse;min-width:620px">
+          <thead>
+            <tr style="text-align:left;background:#F7EEDA">
+              <th style="padding:11px 14px;font-size:11px;letter-spacing:.1em;color:#5A6B75">CÓDIGO</th>
+              <th style="padding:11px 14px;font-size:11px;letter-spacing:.1em;color:#5A6B75">CLIENTE</th>
+              <th style="padding:11px 14px;font-size:11px;letter-spacing:.1em;color:#5A6B75">DATA</th>
+              <th style="padding:11px 14px;font-size:11px;letter-spacing:.1em;color:#5A6B75">ENTRADA</th>
+              <th style="padding:11px 14px;font-size:11px;letter-spacing:.1em;color:#5A6B75">SAÍDA</th>
+              <th style="padding:11px 14px;font-size:11px;letter-spacing:.1em;color:#5A6B75">PERMANÊNCIA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{ permanencia }}" as="p" hint-placeholder-count="3">
+              <tr style="border-top:1px solid rgba(22,80,106,.1)">
+                <td style="padding:11px 14px;font-size:13px;font-weight:700;color:#16506A">{{ p.codigo }}</td>
+                <td style="padding:11px 14px;font-size:13px;color:#12303F">{{ p.nome }}</td>
+                <td style="padding:11px 14px;font-size:13px;color:#3E525C">{{ p.data }}</td>
+                <td style="padding:11px 14px;font-size:13px;color:#3E525C">{{ p.entrada }}</td>
+                <td style="padding:11px 14px;font-size:13px;color:#3E525C">{{ p.saida }}</td>
+                <td style="padding:11px 14px;font-size:13px;font-weight:700;color:#A6501C">{{ p.tempo }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <sc-if value="{{ semPermanencia }}" hint-placeholder-val="{{ false }}">
+        <p style="margin:0;font-size:14px;color:#5A6B75">Nenhum atendimento com check-in registrado ainda.</p>
+      </sc-if>
+    </section>
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { rel: null };
+  componentDidMount() {
+    const tick = () => {
+      if (!window.CB) return setTimeout(tick, 60);
+      if (!window.CB.requireAuth()) return;
+      this.setState({ rel: window.CB.report() });
+    };
+    tick();
+  }
+  renderVals() {
+    const CB = window.CB, rel = this.state.rel;
+    const graf = (titulo, dados, cor, fmt) => {
+      const max = (dados || []).reduce((a, x) => Math.max(a, x.valor), 0) || 1;
+      return {
+        titulo, cor, vazio: !dados || dados.length === 0,
+        barras: (dados || []).map(x => ({
+          chave: fmt ? fmt(x.chave) : x.chave,
+          valor: String(x.valor),
+          largura: Math.max(4, Math.round((x.valor / max) * 100)) + '%'
+        }))
+      };
+    };
+    /* entrada, saída e tempo de permanência lidos do histórico de cada reserva */
+    const hora = iso => iso ? new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
+    const perm = !CB ? [] : CB.getReservations()
+      .map(r => ({ r, ent: CB.statusEm(r, CB.STATUS.CHEGOU), sai: CB.statusEm(r, CB.STATUS.CONCLUIDA) }))
+      .filter(x => x.ent)
+      .sort((a, b) => a.ent < b.ent ? 1 : -1)
+      .slice(0, 40)
+      .map(x => {
+        let tempo = 'em atendimento';
+        if (x.sai) {
+          const min = Math.max(0, Math.round((new Date(x.sai) - new Date(x.ent)) / 60000));
+          tempo = min >= 60 ? Math.floor(min / 60) + 'h' + String(min % 60).padStart(2, '0') : min + ' min';
+        }
+        return {
+          codigo: x.r.codigo, nome: x.r.nome, data: CB.fmtDate(x.r.data),
+          entrada: hora(x.ent), saida: hora(x.sai), tempo
+        };
+      });
+
+    return {
+      permanencia: perm,
+      semPermanencia: perm.length === 0,
+      cards: [
+        { label: 'TOTAL DE RESERVAS', valor: rel ? rel.total : 0, cor: '#16506A' },
+        { label: 'PESSOAS RESERVADAS', valor: rel ? rel.pessoas : 0, cor: '#1B6A8A' },
+        { label: 'CANCELAMENTOS', valor: rel ? rel.cancelamentos : 0, cor: '#9B3B34' },
+        { label: 'NÃO COMPARECEU', valor: rel ? rel.noshows : 0, cor: '#6B4A6B' }
+      ],
+      graficos: rel ? [
+        graf('Reservas por dia', rel.porDia, '#1B6A8A', d => CB.fmtDate(d)),
+        graf('Reservas por ambiente', rel.porAmbiente, '#16506A'),
+        graf('Reservas por horário', rel.porHora, '#E96A2B')
+      ] : [],
+      exportarCsv: () => CB.exportCSV()
+    };
+  }
+}
+
+</script>
+</body>
+</html>

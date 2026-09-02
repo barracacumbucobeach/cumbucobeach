@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="referrer" content="strict-origin-when-cross-origin"/>
+<title>Política de privacidade — Barraca Cumbuco Beach</title>
+<script src="./js/supabase-config.js"></script>
+<script src="./js/storage.js"></script>
+<script src="./js/cloud.js"></script>
+<script src="./js/whatsapp.js"></script>
+</helmet>
+<dc-import name="SiteHeader" hint-size="100%,72px"></dc-import>
+<main style="background:#FDF8EC;padding:clamp(32px,5vw,72px) 20px clamp(56px,8vw,96px)">
+  <article style="max-width:720px;margin:0 auto">
+    <div style="font-size:12px;letter-spacing:.16em;color:#1B6A8A;font-weight:600">LGPD</div>
+    <h1 style="font-family:'Bricolage Grotesque',Georgia,serif;font-weight:800;font-size:clamp(28px,4.6vw,46px);line-height:1.08;margin:12px 0 0;color:#12303F">Política de privacidade</h1>
+    <p style="font-size:18px;line-height:1.7;color:#12303F;margin:22px 0 0;font-weight:600">Seus dados serão utilizados exclusivamente para atendimento e gerenciamento da sua reserva.</p>
+
+    <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;margin:36px 0 10px;color:#12303F">Dados coletados</h2>
+    <p style="font-size:16px;line-height:1.75;color:#3E525C;margin:0">Nome, número de WhatsApp, e-mail (opcional), data, horário, quantidade de pessoas, ambiente escolhido e observações informadas por você no formulário de reserva.</p>
+
+    <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;margin:30px 0 10px;color:#12303F">Finalidade</h2>
+    <p style="font-size:16px;line-height:1.75;color:#3E525C;margin:0">Os dados são usados para registrar, confirmar, alterar e organizar reservas, além de permitir contato pelo WhatsApp sobre a sua solicitação.</p>
+
+    <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;margin:30px 0 10px;color:#12303F">Armazenamento</h2>
+    <p style="font-size:16px;line-height:1.75;color:#3E525C;margin:0">Nesta versão do sistema, os dados das reservas ficam armazenados localmente no navegador utilizado (localStorage), no dispositivo onde a reserva foi feita e no dispositivo da equipe que gerencia o painel. Não há envio automático para servidores externos.</p>
+
+    <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;margin:30px 0 10px;color:#12303F">Compartilhamento</h2>
+    <p style="font-size:16px;line-height:1.75;color:#3E525C;margin:0">Ao usar o botão de envio pelo WhatsApp, a mensagem com os dados da reserva é transmitida pelo aplicativo WhatsApp, sujeito aos termos daquele serviço.</p>
+
+    <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;margin:30px 0 10px;color:#12303F">Seus direitos</h2>
+    <p style="font-size:16px;line-height:1.75;color:#3E525C;margin:0">Você pode solicitar acesso, correção ou exclusão dos seus dados de reserva pelo WhatsApp {{ whatsTexto }}.</p>
+
+    <a href="index.html" style="display:inline-block;margin-top:36px;border:1.5px solid rgba(22,80,106,.28);color:#12303F;padding:15px 26px;border-radius:999px;font-size:14px;font-weight:700" style-hover="background:rgba(22,80,106,.06);color:#12303F">VOLTAR AO INÍCIO</a>
+  </article>
+</main>
+<dc-import name="SiteFooter" hint-size="100%,320px"></dc-import>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    const tick = () => {
+      if (!window.CB) return setTimeout(tick, 80);
+      this.forceUpdate();
+      window.CB.onChange(() => this.forceUpdate());
+    };
+    tick();
+  }
+  renderVals() {
+    const s = window.CB ? window.CB.getSettings() : null;
+    return { whatsTexto: (s && s.whatsapp) || '(85) 98177-7390' };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -69,13 +69,13 @@ class Component extends DCLogic {
   renderVals() {
     const ativo = this.props.active || '';
     const base = [
-      ['Dashboard', 'admin.dc.html'],
-      ['Reservas', 'admin-reservas.dc.html'],
-      ['Calendário', 'admin-calendario.dc.html'],
-      ['Ambientes', 'admin-ambientes.dc.html'],
-      ['Clientes', 'admin-clientes.dc.html'],
-      ['Relatórios', 'admin-relatorios.dc.html'],
-      ['Configurações', 'admin-configuracoes.dc.html']
+      ['Dashboard', 'admin.html'],
+      ['Reservas', 'admin-reservas.html'],
+      ['Calendário', 'admin-calendario.html'],
+      ['Ambientes', 'admin-ambientes.html'],
+      ['Clientes', 'admin-clientes.html'],
+      ['Relatórios', 'admin-relatorios.html'],
+      ['Configurações', 'admin-configuracoes.html']
     ];
     return {
       aberto: this.state.aberto ? 'true' : 'false',
@@ -91,7 +91,7 @@ class Component extends DCLogic {
         this.setState({ aviso: novo });
       },
       toggle: () => this.setState(s => ({ aberto: !s.aberto })),
-      sair: () => { if (window.CB) { window.CB.logout(); location.href = 'admin-login.dc.html'; } },
+      sair: () => { if (window.CB) { window.CB.logout(); location.href = 'admin-login.html'; } },
       itens: base.map(([label, href]) => ({
         label, href,
         cor: label === ativo ? '#16506A' : '#D8E6E2',

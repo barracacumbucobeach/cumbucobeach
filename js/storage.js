@@ -518,7 +518,7 @@
   }
   function isLogged() { try { return global.sessionStorage.getItem(SESSION_KEY) === '1'; } catch (e) { return false; } }
   function requireAuth() {
-    if (!isLogged()) { global.location.replace('admin-login.dc.html'); return false; }
+    if (!isLogged()) { global.location.replace('admin-login.html'); return false; }
     return true;
   }
 

@@ -258,7 +258,7 @@
     var pagina = (global.location.pathname.split('/').pop() || '');
     if (pagina.indexOf('admin') === 0 && pagina.indexOf('admin-login') !== 0 && !autenticado) {
       try { sessionStorage.removeItem('cumbuco_beach_admin_session'); } catch (e) {}
-      global.location.replace('admin-login.dc.html');
+      global.location.replace('admin-login.html');
       return false;
     }
     return true;

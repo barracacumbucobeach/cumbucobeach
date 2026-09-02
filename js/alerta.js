@@ -43,7 +43,7 @@
       });
       n.onclick = function () {
         global.focus();
-        global.location.href = './admin-reservas.dc.html?reserva=' + encodeURIComponent(r.codigo);
+        global.location.href = './admin-reservas.html?reserva=' + encodeURIComponent(r.codigo);
       };
     } catch (e) {}
   }
@@ -113,7 +113,7 @@
       fundo.style.opacity = '0';
       setTimeout(function () { if (fundo.parentNode) fundo.parentNode.removeChild(fundo); }, 320);
     }
-    function ir() { global.location.href = './admin-reservas.dc.html?reserva=' + encodeURIComponent(r.codigo); }
+    function ir() { global.location.href = './admin-reservas.html?reserva=' + encodeURIComponent(r.codigo); }
 
     el.onclick = ir;
     depois.onclick = function (ev) { ev.stopPropagation(); fechar(); };
