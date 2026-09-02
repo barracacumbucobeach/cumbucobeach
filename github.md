@@ -17,7 +17,7 @@ código do site nasceu neste projeto e será enviado para lá pelo usuário.
 
 | Tela do projeto | Arquivos |
 | --- | --- |
-| Início | `index.dc.html`, `SiteHeader.dc.html`, `SiteFooter.dc.html` |
+| Início | `index.html`, `SiteHeader.dc.html`, `SiteFooter.dc.html` |
 | Ambientes | `ambientes.dc.html` |
 | Reservar | `reservar.dc.html`, `sucesso.dc.html` |
 | Localização / Contato | `localizacao.dc.html`, `contato.dc.html` |

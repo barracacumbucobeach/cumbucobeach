@@ -9,7 +9,7 @@ Não usa React, Vue, Angular, Bootstrap, jQuery, Node, PHP, Python ou banco de d
 
 ## Como abrir
 
-Abra `index.dc.html` no navegador. Todas as páginas funcionam sem servidor.
+Abra `index.html` no navegador. Todas as páginas funcionam sem servidor.
 
 > Os arquivos de página usam a extensão `.dc.html` (são páginas HTML normais, com a marcação
 > encapsulada em um componente de streaming). Para publicar com nomes clássicos
@@ -18,7 +18,7 @@ Abra `index.dc.html` no navegador. Todas as páginas funcionam sem servidor.
 ## Páginas
 
 Site público
-- `index.dc.html` — home (header, hero, sobre, ambientes, galeria, como funciona, localização, CTA, footer)
+- `index.html` — home (arquivo único: é esta a página inicial, editar sempre aqui) (header, hero, sobre, ambientes, galeria, como funciona, localização, CTA, footer)
 - `reservar.dc.html` — fluxo de reserva em 6 etapas
 - `ambientes.dc.html` — todos os ambientes
 - `localizacao.dc.html` — endereço + botão "COMO CHEGAR" (Google Maps)
