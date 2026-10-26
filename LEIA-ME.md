@@ -51,3 +51,7 @@ O plano grátis do Supabase pausa o projeto depois de 7 dias sem uso. O arquivo 
 | Cores e fontes | `css/site.css` (topo do arquivo) |
 
 Para desligar o Supabase de vez, deixe `supabaseUrl` e `supabaseChave` vazios em `js/config.js`: o site continua 100% pelo WhatsApp e o painel passa a guardar os dados só no aparelho.
+
+## Atualizar arquivos sem cache velho
+
+As páginas chamam o CSS e o JavaScript com um número de versão (ex.: `css/site.css?v=20261026d`). Sempre que trocar um arquivo `.css` ou `.js`, mude esse número nas páginas `.html` — assim o navegador dos clientes baixa a versão nova em vez de usar a guardada.

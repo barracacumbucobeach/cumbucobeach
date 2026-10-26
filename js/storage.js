@@ -147,7 +147,7 @@
   function horarios(data) {
     var c = ler().config, ini = toMin(c.horaInicio), fim = toMin(c.horaFim), passo = Math.max(10, +c.intervalo || 30);
     var limite = -1;
-    if (data && data === hoje()) { var a = new Date(); limite = a.getHours() * 60 + a.getMinutes() + 30; }
+    if (data && data === hoje()) { var a = new Date(); limite = a.getHours() * 60 + a.getMinutes(); }  /* hoje: só horários que ainda não passaram */
     var out = [];
     for (var m = ini; m <= fim; m += passo) { if (m <= limite) continue; out.push(pad(Math.floor(m / 60)) + ':' + pad(m % 60)); }
     return out;

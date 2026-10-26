@@ -52,6 +52,11 @@ function iniciarReserva() {
         ' aria-label="' + esc(CB.dataExtenso(iso)) + (fechado ? ', indisponível' : '') + '"><small>' + sem + '</small><b>' + p[2] + '</b><small>' + dt.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') + '</small></button>';
     }
     $('#dias').innerHTML = html;
+    /* depois do último horário: avisa que hoje encerrou e oferece outro dia */
+    var encerrado = !CB.diaFechado(hoje) && !CB.horarios(hoje).length;
+    var fim = String(cfg.horaFim || '14:30').replace(/^0/, '').replace(':00', 'h').replace(':', 'h');
+    $('#aviso-encerrado').hidden = !encerrado;
+    $('#aviso-encerrado-txt').textContent = 'Você pode agendar para amanhã ou para outro dia da sua escolha. Nossas reservas vão até as ' + fim + '.';
   }
   var inp = $('#outra-data');
   inp.min = hoje; inp.max = CB.somaDias(hoje, +cfg.antecedenciaDias || 60);
@@ -71,9 +76,7 @@ function iniciarReserva() {
   /* aviso de chegada: prazo para reservar no mesmo dia */
   function avisoHoje() {
     var el = $('#aviso-hoje'); if (!el) return;
-    if (st.data !== CB.hoje()) { el.textContent = ''; return; }
-    var m = CB.toMin(cfg.horaFim) - 30, h = Math.floor(m / 60), mi = m % 60;
-    el.textContent = 'Para hoje, as reservas podem ser feitas até as ' + h + 'h' + (mi ? String(mi).padStart(2, '0') : '') + '.';
+    el.textContent = '';
   }
   function renderHoras() {
     avisoHoje();

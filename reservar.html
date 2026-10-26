@@ -13,8 +13,8 @@
 <meta property="og:image" content="https://cumbucobeach.com.br/assets/logo/link-preview.png">
 <link rel="icon" href="assets/logo/favicon.png">
 <link rel="preload" href="assets/fonts/bricolage-grotesque-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/fonts.css?v=20261026d">
+<link rel="stylesheet" href="css/site.css?v=20261026d">
 <script>document.documentElement.className += ' js';</script>
 </head>
 <body class="pag-reserva">
@@ -47,6 +47,10 @@
 
           <div class="bloco">
             <div class="bloco__rot"><span id="rot-dia">Dia</span><small id="mes-atual"></small></div>
+            <div class="aviso-encerrado" id="aviso-encerrado" role="status" hidden>
+              <i data-ico="relogio"></i>
+              <div><b>As reservas para hoje já foram encerradas.</b> <span id="aviso-encerrado-txt"></span></div>
+            </div>
             <div class="dias" id="dias" role="group" aria-labelledby="rot-dia"></div>
             <label class="outra-data">Outra data: <input type="date" id="outra-data"></label>
             <p class="msg-erro" data-erro="data"></p>
@@ -137,11 +141,11 @@
 
 <footer id="rodape"></footer>
 
-<script src="js/config.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/nuvem.js"></script>
-<script src="js/whatsapp.js"></script>
-<script src="js/layout.js"></script>
-<script src="js/reservar.js"></script>
+<script src="js/config.js?v=20261026d"></script>
+<script src="js/storage.js?v=20261026d"></script>
+<script src="js/nuvem.js?v=20261026d"></script>
+<script src="js/whatsapp.js?v=20261026d"></script>
+<script src="js/layout.js?v=20261026d"></script>
+<script src="js/reservar.js?v=20261026d"></script>
 </body>
 </html>

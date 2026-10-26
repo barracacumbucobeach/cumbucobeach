@@ -361,6 +361,10 @@ p { margin: 0; text-wrap: pretty; }
 .hora:hover:not(:disabled) { box-shadow: inset 0 0 0 1.5px rgba(13, 58, 80, .4); }
 .hora[aria-pressed="true"] { background: var(--sol); color: #fff; box-shadow: none; transform: scale(1.04); }
 .hora:disabled { opacity: .35; cursor: not-allowed; text-decoration: line-through; }
+.aviso-encerrado { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 14px; padding: 14px 16px; border-radius: 14px; background: #E8F4F4; border-left: 4px solid var(--mar); font-size: 15px; line-height: 1.5; color: #164E52; }
+.aviso-encerrado[hidden] { display: none; }
+.aviso-encerrado svg { width: 22px; height: 22px; flex: none; color: var(--mar); margin-top: 1px; }
+.aviso-encerrado b { color: #0E3B3E; }
 .aviso-chegada { display: flex; gap: 12px; align-items: flex-start; margin: 0 0 14px; padding: 14px 16px; border-radius: 14px; background: #FFF4E5; border-left: 4px solid var(--ouro); font-size: 15px; line-height: 1.5; color: #5C3B07; }
 .aviso-chegada svg { width: 22px; height: 22px; flex: none; color: #C27C0E; margin-top: 1px; }
 .aviso-chegada b { color: #4A2F05; }
