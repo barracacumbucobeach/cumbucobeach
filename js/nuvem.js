@@ -142,7 +142,17 @@
     if (!ativo) return Promise.resolve({ ok: false, fora: true });
     return req('/auth/v1/token?grant_type=password', { metodo: 'POST', corpo: { email: String(email || '').trim(), password: senha }, token: false, tempo: 8000 })
       .then(function (j) { guardarToken(j); return { ok: true }; })
-      .catch(function (e) { return e.fora ? { ok: false, fora: true } : { ok: false, credenciais: true, msg: e.message }; });
+      .catch(function (e) {
+        if (e.fora) return { ok: false, fora: true };
+        var m = String(e.message || ''), st = e.status || 0, txt;
+        if (/invalid login credentials|invalid_grant/i.test(m)) txt = 'E-mail ou senha incorretos.';
+        else if (/not confirmed/i.test(m)) txt = 'Este e-mail ainda não foi confirmado no Supabase. Em Authentication › Users, abra o usuário e confirme o e-mail.';
+        else if (/logins are disabled|provider is disabled|signups not allowed/i.test(m)) txt = 'O login por e-mail está desligado no Supabase (Authentication › Sign In / Providers › Email).';
+        else if (/api key|apikey|jwt/i.test(m) || st === 401) txt = 'O Supabase recusou a chave do site. Confira o supabaseUrl e a supabaseChave em js/config.js.';
+        else if (/rate limit|too many/i.test(m) || st === 429) txt = 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.';
+        else txt = 'O Supabase respondeu: ' + m + (st ? ' (erro ' + st + ')' : '');
+        return { ok: false, credenciais: true, msg: txt };
+      });
   }
   function sair() {
     var s = lerSessao(); gravarSessao(null);
