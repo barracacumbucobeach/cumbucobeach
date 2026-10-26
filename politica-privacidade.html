@@ -1,81 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="./support.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacidade — Barraca Cumbuco Beach</title>
+<meta name="description" content="Como a Barraca Cumbuco Beach usa os dados informados na reserva.">
+<meta name="theme-color" content="#0D3A50">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Barraca Cumbuco Beach">
+<meta property="og:title" content="Privacidade — Barraca Cumbuco Beach">
+<meta property="og:description" content="Como a Barraca Cumbuco Beach usa os dados informados na reserva.">
+<meta property="og:url" content="https://cumbucobeach.com.br/politica-privacidade.html">
+<meta property="og:image" content="https://cumbucobeach.com.br/assets/logo/link-preview.png">
+<link rel="icon" href="assets/logo/favicon.png">
+<link rel="preload" href="assets/fonts/bricolage-grotesque-latin-standard-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/site.css">
+<script>document.documentElement.className += ' js';</script>
 </head>
 <body>
-<x-dc>
-<helmet>
-<style>
-</style>
+<header id="topo"></header>
 
-<meta name="referrer" content="strict-origin-when-cross-origin"/>
-<title>Política de privacidade — Barraca Cumbuco Beach</title>
-<meta property="og:type" content="website"/>
-<meta property="og:site_name" content="Barraca Cumbuco Beach"/>
-<meta property="og:title" content="Política de privacidade — Barraca Cumbuco Beach"/>
-<meta property="og:description" content="Reserve sua mesa na Barraca Cumbuco Beach. Escolha o ambiente, a data e o horário — Av. Central, 49, Tabuba, Caucaia (CE)."/>
-<meta property="og:url" content="https://cumbucobeach.com.br/politica-privacidade.html"/>
-<meta property="og:image" content="https://cumbucobeach.com.br/assets/logo/link-preview.png"/>
-<meta property="og:image:width" content="1200"/>
-<meta property="og:image:height" content="630"/>
-<meta property="og:image:alt" content="Logo da Barraca Cumbuco Beach"/>
-<meta property="og:locale" content="pt_BR"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="description" content="Reserve sua mesa na Barraca Cumbuco Beach. Escolha o ambiente, a data e o horário — Av. Central, 49, Tabuba, Caucaia (CE)."/>
-<meta name="theme-color" content="#12303F"/>
-
-<script src="./js/supabase-config.js"></script>
-<script src="./js/storage.js"></script>
-<script src="./js/cloud.js"></script>
-<script src="./js/whatsapp.js"></script>
-</helmet>
-<dc-import name="SiteHeader" hint-size="100%,72px"></dc-import>
-<main style="background:#FDF8EC;padding:clamp(32px,5vw,72px) 20px clamp(56px,8vw,96px)">
-  <article style="max-width:720px;margin:0 auto">
-    <div style="font-size:12px;letter-spacing:.16em;color:#1B6A8A;font-weight:600">LGPD</div>
-    <h1 style="font-family:'Bricolage Grotesque',Georgia,serif;font-weight:800;font-size:clamp(28px,4.6vw,46px);line-height:1.08;margin:12px 0 0;color:#12303F">Política de privacidade</h1>
-    <p style="font-size:18px;line-height:1.7;color:#12303F;margin:22px 0 0;font-weight:600">Seus dados serão utilizados exclusivamente para atendimento e gerenciamento da sua reserva.</p>
-
-    <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;margin:36px 0 10px;color:#12303F">Dados coletados</h2>
-    <p style="font-size:16px;line-height:1.75;color:#3E525C;margin:0">Nome, número de WhatsApp, e-mail (opcional), data, horário, quantidade de pessoas, ambiente escolhido e observações informadas por você no formulário de reserva.</p>
-
-    <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;margin:30px 0 10px;color:#12303F">Finalidade</h2>
-    <p style="font-size:16px;line-height:1.75;color:#3E525C;margin:0">Os dados são usados para registrar, confirmar, alterar e organizar reservas, além de permitir contato pelo WhatsApp sobre a sua solicitação.</p>
-
-    <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;margin:30px 0 10px;color:#12303F">Armazenamento</h2>
-    <p style="font-size:16px;line-height:1.75;color:#3E525C;margin:0">Nesta versão do sistema, os dados das reservas ficam armazenados localmente no navegador utilizado (localStorage), no dispositivo onde a reserva foi feita e no dispositivo da equipe que gerencia o painel. Não há envio automático para servidores externos.</p>
-
-    <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;margin:30px 0 10px;color:#12303F">Compartilhamento</h2>
-    <p style="font-size:16px;line-height:1.75;color:#3E525C;margin:0">Ao usar o botão de envio pelo WhatsApp, a mensagem com os dados da reserva é transmitida pelo aplicativo WhatsApp, sujeito aos termos daquele serviço.</p>
-
-    <h2 style="font-family:'Bricolage Grotesque',Georgia,serif;font-size:20px;margin:30px 0 10px;color:#12303F">Seus direitos</h2>
-    <p style="font-size:16px;line-height:1.75;color:#3E525C;margin:0">Você pode solicitar acesso, correção ou exclusão dos seus dados de reserva pelo WhatsApp {{ whatsTexto }}.</p>
-
-    <a href="index.html" style="display:inline-block;margin-top:36px;border:1.5px solid rgba(22,80,106,.28);color:#12303F;padding:15px 26px;border-radius:999px;font-size:14px;font-weight:700" style-hover="background:rgba(22,80,106,.06);color:#12303F">VOLTAR AO INÍCIO</a>
-  </article>
+<main class="wrap">
+  <section class="cab-pag"><h1>Privacidade</h1><p class="lead">Como usamos os dados que você informa ao reservar.</p></section>
+  <div class="texto">
+    <h2>Quais dados pedimos</h2>
+    <p>Nome, WhatsApp, e-mail, quantidade de pessoas, local, data e horário da reserva, além de observações que você quiser incluir.</p>
+    <h2>Para que usamos</h2>
+    <p>Somente para receber, confirmar e organizar a sua reserva e falar com você sobre ela. Não vendemos nem repassamos seus dados.</p>
+    <h2>Por onde os dados passam</h2>
+    <p>Ao enviar, o seu WhatsApp abre com a mensagem pronta para o número da barraca: você vê o texto completo antes de enviar. Uma cópia da reserva fica guardada no seu próprio aparelho para você consultar o código depois, e a equipe registra a reserva no painel interno da barraca.</p>
+    <h2>Seus direitos</h2>
+    <p>Você pode pedir a correção ou a exclusão dos seus dados a qualquer momento pelo WhatsApp (85) 98177-7390, conforme a Lei Geral de Proteção de Dados (LGPD).</p>
+    <p><button class="btn btn--claro" type="button" id="apagar" style="margin-top:20px">Apagar meus dados deste aparelho</button> <span id="apagado" role="status" style="margin-left:10px;color:var(--tinta-2)"></span></p>
+  </div>
 </main>
-<dc-import name="SiteFooter" hint-size="100%,320px"></dc-import>
-
-</x-dc>
-<script type="text/x-dc" data-dc-script>
-class Component extends DCLogic {
-  componentDidMount() {
-    const tick = () => {
-      if (!window.CB) return setTimeout(tick, 80);
-      this.forceUpdate();
-      window.CB.onChange(() => this.forceUpdate());
-    };
-    tick();
+<footer id="rodape"></footer>
+<script src="js/config.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/nuvem.js"></script>
+<script src="js/whatsapp.js"></script>
+<script src="js/layout.js"></script>
+<script>
+document.getElementById('apagar').addEventListener('click', function () {
+  try { localStorage.removeItem('cumbuco_cliente'); } catch (e) {}
+  if (!window.CB.logado()) {
+    try {
+      var db = JSON.parse(localStorage.getItem('cumbuco_beach_v2') || 'null');
+      if (db && db.reservas) { db.reservas = db.reservas.filter(function (r) { return r.origem !== 'site'; }); localStorage.setItem('cumbuco_beach_v2', JSON.stringify(db)); }
+    } catch (e) {}
   }
-  renderVals() {
-    const s = window.CB ? window.CB.getSettings() : null;
-    return { whatsTexto: (s && s.whatsapp) || '(85) 98177-7390' };
-  }
-}
-
+  document.getElementById('apagado').textContent = 'Pronto. Seus dados foram apagados deste aparelho.';
+});
 </script>
 </body>
 </html>
