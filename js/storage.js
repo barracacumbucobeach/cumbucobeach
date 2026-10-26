@@ -1,565 +1,431 @@
 /* ============================================================
-   BARRACA CUMBUCO BEACH — camada única de armazenamento
-   Toda leitura/gravação do sistema passa por aqui (window.CB).
-   Para migrar para backend real, reescreva SOMENTE este arquivo
-   (mesmas assinaturas, retornando dados da API).
+   BARRACA CUMBUCO BEACH — dados locais (window.CB)
+   Cache local (localStorage) de tudo que o site e o painel usam.
+   Com o Supabase ligado, js/nuvem.js sincroniza este cache com o banco.
    ============================================================ */
-(function (global) {
+(function (g) {
   'use strict';
-
-  var DB_KEY = 'cumbuco_beach_db_v1';
-  var SESSION_KEY = 'cumbuco_beach_admin_session';
+  var CFG = g.CB_CONFIG || {};
+  var DB_KEY = 'cumbuco_beach_v2';
+  var SESSION_KEY = 'cumbuco_admin_sessao';
 
   var STATUS = {
-    PENDENTE: 'AGUARDANDO CONFIRMAÇÃO',
-    CONFIRMADA: 'CONFIRMADA',
-    CANCELADA: 'CANCELADA',
-    CHEGOU: 'CLIENTE CHEGOU',
-    CONCLUIDA: 'CONCLUÍDA',
-    NOSHOW: 'NÃO COMPARECEU'
+    PENDENTE: 'Aguardando confirmação',
+    CONFIRMADA: 'Confirmada',
+    CHEGOU: 'Cliente chegou',
+    CONCLUIDA: 'Concluída',
+    CANCELADA: 'Cancelada',
+    NOSHOW: 'Não compareceu'
   };
-  var STATUS_LIST = [STATUS.PENDENTE, STATUS.CONFIRMADA, STATUS.CANCELADA, STATUS.CHEGOU, STATUS.CONCLUIDA, STATUS.NOSHOW];
-  var STATUS_COLOR = {};
-  STATUS_COLOR[STATUS.PENDENTE] = '#B7791F';
-  STATUS_COLOR[STATUS.CONFIRMADA] = '#17706F';
-  STATUS_COLOR[STATUS.CANCELADA] = '#9B3B34';
-  STATUS_COLOR[STATUS.CHEGOU] = '#2F6F4F';
-  STATUS_COLOR[STATUS.CONCLUIDA] = '#4A5A5B';
-  STATUS_COLOR[STATUS.NOSHOW] = '#6B4A6B';
+  var STATUS_LIST = [STATUS.PENDENTE, STATUS.CONFIRMADA, STATUS.CHEGOU, STATUS.CONCLUIDA, STATUS.CANCELADA, STATUS.NOSHOW];
+  var STATUS_TOM = {};
+  STATUS_TOM[STATUS.PENDENTE] = 'pend';
+  STATUS_TOM[STATUS.CONFIRMADA] = 'ok';
+  STATUS_TOM[STATUS.CHEGOU] = 'chegou';
+  STATUS_TOM[STATUS.CONCLUIDA] = 'fim';
+  STATUS_TOM[STATUS.CANCELADA] = 'cancel';
+  STATUS_TOM[STATUS.NOSHOW] = 'noshow';
 
-  function uid(p) { return (p || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-
-  /* identificador compatível com o banco (colunas uuid) */
-  function uuid() {
-    if (global.crypto && global.crypto.randomUUID) return global.crypto.randomUUID();
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-      var r = (Math.random() * 16) | 0;
-      return (c === 'x' ? r : ((r & 0x3) | 0x8)).toString(16);
-    });
-  }
-
-  var DEFAULT_SPACES = [
-    { nome: 'Salão Coberto Entrada', descricao: 'Salão coberto logo na entrada da barraca, prático para chegar e sentar.', imagem: 'assets/images/ambientes/salao-coberto-entrada.jpeg', capacidade: 90 },
-    { nome: 'Salão Coberto Central', descricao: 'Espaço coberto central, indicado para grupos menores e famílias.', imagem: 'assets/images/ambientes/salao-coberto-central.jpeg', capacidade: 50 },
-    { nome: 'Salão Coberto Central — Caminho da Praia', descricao: 'Salão coberto no caminho da praia, entre a estrutura da barraca e a areia.', imagem: 'assets/images/ambientes/salao-coberto-central-caminho-praia.jpeg', capacidade: 122 },
-    { nome: 'Salão Coberto Praia Piscina', descricao: 'Área coberta junto à piscina, com sombra e movimento da barraca por perto.', imagem: 'assets/images/ambientes/salao-coberto-praia-piscina.jpeg', capacidade: 122 },
-    { nome: 'Tendas Praia', descricao: 'Tendas praia 1 e 2, na faixa de areia — 6 lugares em cada tenda.', imagem: 'assets/images/ambientes/tendas.jpeg', capacidade: 12 },
-    { nome: 'Tendas Central', descricao: 'Tendas central 1 e 2, na área central da barraca — 6 lugares em cada tenda.', imagem: 'assets/images/ambientes/tendas.jpeg', capacidade: 12 },
-    { nome: 'Tendas Superior', descricao: 'Tendas superior 1 e 2, na parte alta, com vista ampla do mar — 6 lugares em cada tenda.', imagem: 'assets/images/ambientes/tendas.jpeg', capacidade: 12 },
-    { nome: 'Mesas Praia Sol Nascente', descricao: 'Mesas na areia no lado nascente, sob cobertura, de frente para o mar.', imagem: 'assets/images/ambientes/mesas-praia-sol-nascente.jpeg', capacidade: 140 },
-    { nome: 'Mesas Praia Central', descricao: 'Mesas na areia em posição central, com acesso direto ao mar.', imagem: 'assets/images/ambientes/mesas-praia-central.jpeg', capacidade: 140 },
-    { nome: 'Mesas Praia Sol Poente', descricao: 'Mesas na areia no lado poente, opção para acompanhar o pôr do sol.', imagem: 'assets/images/ambientes/mesas-praia-sol-poente.jpeg', capacidade: 140 }
+  var CATEGORIAS = [
+    { id: 'areia', nome: 'Pé na areia', resumo: 'Mesas sob cobertura direto na faixa de areia, de frente para o mar.' },
+    { id: 'coberto', nome: 'Salões cobertos', resumo: 'Sombra garantida, perto da cozinha, da piscina e do caminho da praia.' },
+    { id: 'tendas', nome: 'Tendas', resumo: 'Espaços reservados para até 6 pessoas, com mais privacidade.' }
   ];
 
-  /* padrão local por nome — usado como reserva quando o cadastro do banco
-     ainda não tem foto ou capacidade preenchida */
-  function chave(n) {
-    return String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
-  }
-  function defaultSpaceByName(nome) {
-    var alvo = chave(nome);
-    return DEFAULT_SPACES.filter(function (s) { return chave(s.nome) === alvo; })[0] || null;
-  }
+  var AMBIENTES = [
+    { id: 'praia-nascente', cat: 'areia', nome: 'Mesas Praia Sol Nascente', descricao: 'Mesas na areia no lado do nascente, sob cobertura e de frente para o mar.', imagem: 'assets/images/ambientes/mesas-praia-sol-nascente.jpg', capacidade: 140 },
+    { id: 'praia-central', cat: 'areia', nome: 'Mesas Praia Central', descricao: 'Mesas na areia em posição central, com acesso direto ao mar.', imagem: 'assets/images/ambientes/mesas-praia-central.jpg', capacidade: 140 },
+    { id: 'praia-poente', cat: 'areia', nome: 'Mesas Praia Sol Poente', descricao: 'Mesas na areia do lado poente — o lugar para ver o sol baixar.', imagem: 'assets/images/ambientes/mesas-praia-sol-poente.jpg', capacidade: 140 },
+    { id: 'salao-entrada', cat: 'coberto', nome: 'Salão Coberto Entrada', descricao: 'Logo na entrada da barraca: prático para chegar e sentar.', imagem: 'assets/images/ambientes/salao-coberto-entrada.jpg', capacidade: 90 },
+    { id: 'salao-central', cat: 'coberto', nome: 'Salão Coberto Central', descricao: 'Espaço central e mais reservado, bom para famílias e grupos menores.', imagem: 'assets/images/ambientes/salao-coberto-central.jpg', capacidade: 50 },
+    { id: 'salao-caminho', cat: 'coberto', nome: 'Salão Coberto Central — Caminho da Praia', descricao: 'Entre a estrutura da barraca e a areia, com brisa e vista para o mar.', imagem: 'assets/images/ambientes/salao-coberto-central-caminho-praia.jpg', capacidade: 122 },
+    { id: 'salao-piscina', cat: 'coberto', nome: 'Salão Coberto Praia Piscina', descricao: 'Área coberta junto à piscina, com sombra e o movimento da barraca por perto.', imagem: 'assets/images/ambientes/salao-coberto-praia-piscina.jpg', capacidade: 122 },
+    { id: 'tendas-praia', cat: 'tendas', nome: 'Tendas Praia', descricao: 'Tendas 1 e 2 na faixa de areia — 6 lugares em cada.', imagem: 'assets/images/ambientes/tendas.jpg', capacidade: 12 },
+    { id: 'tendas-central', cat: 'tendas', nome: 'Tendas Central', descricao: 'Tendas 1 e 2 na área central da barraca — 6 lugares em cada.', imagem: 'assets/images/ambientes/tendas.jpg', capacidade: 12 },
+    { id: 'tendas-superior', cat: 'tendas', nome: 'Tendas Superior', descricao: 'Tendas 1 e 2 na parte alta, com vista ampla do mar — 6 lugares em cada.', imagem: 'assets/images/ambientes/tendas.jpg', capacidade: 12 }
+  ];
 
-  var DEFAULT_SETTINGS = {
-    nome: 'Barraca Cumbuco Beach',
-    endereco: 'Av. Central, 49 - Tabuba, Caucaia - CE, 61618-015',
-    whatsapp: '(85) 98177-7390',
-    whatsappNumero: '5585981777390',
+  var PADRAO = {
     horaInicio: '09:00',
     horaFim: '14:30',
     intervalo: 30,
-    msgConfirmacao: 'Sua reserva na Barraca Cumbuco Beach está CONFIRMADA. Até logo!',
-    msgCancelamento: 'Sua reserva na Barraca Cumbuco Beach foi cancelada. Qualquer dúvida, fale com a gente pelo WhatsApp.',
-    politica: 'A reserva é uma solicitação e só é válida após confirmação da equipe. Tolerância de 20 minutos após o horário reservado. Cancelamentos devem ser informados pelo WhatsApp.'
+    maxPessoas: 60,
+    antecedenciaDias: 60,
+    msgConfirmacao: 'Sua reserva está confirmada. Já estamos esperando por você!',
+    msgCancelamento: 'Sua reserva foi cancelada. Se quiser remarcar, é só responder esta mensagem.',
+    politica: 'A reserva é uma solicitação e vale após a confirmação da equipe pelo WhatsApp. Tolerância de 20 minutos após o horário. Cancelamentos devem ser avisados pelo WhatsApp.',
+    senhaHash: ''
   };
+  var SENHA_INICIAL = 'cumbuco2026';
 
-  /* Chaves que NUNCA podem ficar nas configurações: elas são lidas
-     publicamente pelo site e gravadas no banco compartilhado. */
-  var CHAVES_PROIBIDAS = ['adminUser', 'adminPass', 'senha', 'password', 'token', 'apiKey', 'serviceKey'];
-  function limparSensiveis(obj) {
-    if (!obj) return obj;
-    CHAVES_PROIBIDAS.forEach(function (k) { delete obj[k]; });
-    return obj;
+  /* ---------- utilidades ---------- */
+  function uuid() {
+    if (g.crypto && g.crypto.randomUUID) return g.crypto.randomUUID();
+    return 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   }
-
-  /* Texto vindo do usuário: sem caracteres de controle e com tamanho limitado.
-     A escrita no DOM já usa textContent; isto é uma segunda barreira. */
-  function limparTexto(v, max) {
-    return String(v == null ? '' : v)
-      .replace(/[\u0000-\u001F\u007F\u200B-\u200D\uFEFF]/g, ' ')
-      .trim()
-      .slice(0, max || 200);
+  function hash(str) { /* cyrb53 — hash local da senha do painel */
+    var h1 = 0xdeadbeef ^ 7, h2 = 0x41c6ce57 ^ 7;
+    for (var i = 0, ch; i < str.length; i++) {
+      ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
   }
-
-  function defaultDB() {
-    var spaces = DEFAULT_SPACES.map(function (s, i) {
-      return { id: uuid(), nome: s.nome, descricao: s.descricao, imagem: s.imagem || '', capacidade: s.capacidade || 0, ativo: true, ordem: i + 1 };
-    });
-    return {
-      versao: 1,
-      settings: JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
-      spaces: spaces,
-      reservations: [],
-      customers: [],
-      blocks: [],
-      waitlist: []
-    };
+  function limpar(v, max) {
+    return String(v == null ? '' : v).replace(/[\u0000-\u001F\u007F​-‍﻿]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max || 200);
   }
-
-  var _cache = null;
-
-  function read() {
-    if (_cache) return _cache;
-    try {
-      var raw = global.localStorage.getItem(DB_KEY);
-      _cache = raw ? JSON.parse(raw) : defaultDB();
-    } catch (e) { _cache = defaultDB(); }
-    if (!_cache.spaces || !_cache.spaces.length) _cache.spaces = defaultDB().spaces;
-    if (!_cache.settings) _cache.settings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
-    ['reservations', 'customers', 'blocks', 'waitlist'].forEach(function (k) { if (!_cache[k]) _cache[k] = []; });
-    return _cache;
+  function digits(v) { return String(v || '').replace(/\D/g, ''); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function isoDe(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function hoje() { return isoDe(new Date()); }
+  function somaDias(iso, n) { var p = iso.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2] + n); return isoDe(d); }
+  function fmtData(iso) { var p = String(iso || '').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : (iso || ''); }
+  function dataExtenso(iso, curto) {
+    var p = String(iso || '').split('-'); if (p.length !== 3) return iso || '';
+    var d = new Date(+p[0], +p[1] - 1, +p[2]);
+    var s = d.toLocaleDateString('pt-BR', curto ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    return s.charAt(0).toUpperCase() + s.slice(1);
   }
-
-  function write(db) {
-    _cache = db;
-    try { global.localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) {}
-    try { global.dispatchEvent(new CustomEvent('cb:changed')); } catch (e) {}
-    return db;
-  }
-
-  /* ---------- utilidades de data / texto ---------- */
-  function todayISO() {
-    var d = new Date(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
-    return d.getFullYear() + '-' + m + '-' + day;
-  }
-  function fmtDate(iso) {
-    if (!iso) return '';
-    var p = String(iso).split('-');
-    return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
-  }
-  function fmtStamp(d) {
-    d = d ? new Date(d) : new Date();
-    var p = function (n) { return String(n).padStart(2, '0'); };
-    return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
-  }
-  function maskPhone(v) {
-    var d = String(v || '').replace(/\D/g, '').slice(0, 11);
-    if (d.length <= 2) return d.length ? '(' + d : '';
+  function fmtCarimbo(d) { d = new Date(d); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function mascaraTel(v) {
+    var d = digits(v); if (d.indexOf('55') === 0 && d.length > 11) d = d.slice(2); d = d.slice(0, 11);
+    if (!d) return '';
+    if (d.length <= 2) return '(' + d;
     if (d.length <= 6) return '(' + d.slice(0, 2) + ') ' + d.slice(2);
     if (d.length <= 10) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
     return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
   }
-  function validPhone(v) { return String(v || '').replace(/\D/g, '').length >= 10; }
-  function validEmail(v) { return !v || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }
-  function digits(v) { return String(v || '').replace(/\D/g, ''); }
+  function telValido(v) { var n = digits(v).length; return n === 10 || n === 11; }
+  function emailValido(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v || '').trim()); }
+  function toMin(t) { var p = String(t || '0:0').split(':'); return (+p[0]) * 60 + (+p[1] || 0); }
+
+  /* ---------- banco local ---------- */
+  function novoBanco() {
+    return {
+      versao: 2,
+      config: JSON.parse(JSON.stringify(PADRAO)),
+      ambientes: AMBIENTES.map(function (a, i) { return Object.assign({ ativo: true, ordem: i + 1 }, a); }),
+      reservas: [],
+      bloqueios: []
+    };
+  }
+  var _db = null;
+  /* gancho de sincronização: o painel conectado ao Supabase registra aqui */
+  var gancho = null;
+  function avisar(acao, dado) { if (gancho) try { gancho(acao, dado); } catch (e) {} }
+  function ler() {
+    if (_db) return _db;
+    try { var raw = g.localStorage.getItem(DB_KEY); _db = raw ? JSON.parse(raw) : novoBanco(); }
+    catch (e) { _db = novoBanco(); }
+    var base = novoBanco();
+    _db.config = Object.assign({}, base.config, _db.config || {});
+    if (!_db.ambientes || !_db.ambientes.length) _db.ambientes = base.ambientes;
+    if (!_db.reservas) _db.reservas = [];
+    if (!_db.bloqueios) _db.bloqueios = [];
+    if (!_db.config.senhaHash) _db.config.senhaHash = hash(SENHA_INICIAL);
+    return _db;
+  }
+  function gravar(db) {
+    _db = db;
+    try { g.localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) {}
+    try { g.dispatchEvent(new CustomEvent('cb:mudou')); } catch (e) {}
+    return db;
+  }
+  /* outra aba gravou → recarrega */
+  g.addEventListener('storage', function (e) { if (e.key === DB_KEY) { _db = null; try { g.dispatchEvent(new CustomEvent('cb:mudou')); } catch (x) {} } });
+
+  /* ---------- configuração ---------- */
+  function getConfig() { var c = Object.assign({}, ler().config); delete c.senhaHash; return c; }
+  function salvarConfig(patch) {
+    var db = ler(); patch = Object.assign({}, patch); delete patch.senhaHash;
+    db.config = Object.assign({}, db.config, patch); gravar(db); avisar('config'); return getConfig();
+  }
 
   /* ---------- horários ---------- */
-  /* Lista de horários. Passando a data, os horários que já passaram no dia de
-     hoje ficam de fora — o cliente só vê o que ainda é possível atender. */
-  function getTimeSlots(data) {
-    var s = getSettings();
-    var toMin = function (t) { var p = String(t).split(':'); return (+p[0]) * 60 + (+p[1] || 0); };
-    var start = toMin(s.horaInicio || '09:00'), end = toMin(s.horaFim || '14:30'), step = Math.max(5, +s.intervalo || 30);
-    var min = -1;
-    if (data && data === todayISO()) {
-      var agora = new Date();
-      min = agora.getHours() * 60 + agora.getMinutes();
-    }
+  function horarios(data) {
+    var c = ler().config, ini = toMin(c.horaInicio), fim = toMin(c.horaFim), passo = Math.max(10, +c.intervalo || 30);
+    var limite = -1;
+    if (data && data === hoje()) { var a = new Date(); limite = a.getHours() * 60 + a.getMinutes() + 30; }
     var out = [];
-    for (var m = start; m <= end; m += step) {
-      if (m <= min) continue;
-      out.push(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'));
-    }
+    for (var m = ini; m <= fim; m += passo) { if (m <= limite) continue; out.push(pad(Math.floor(m / 60)) + ':' + pad(m % 60)); }
     return out;
-  }
-
-  /* ---------- configurações ---------- */
-  /* Ajuste do limite de reserva (14:30). Configurações antigas gravadas com o fim
-     em 17:00 e sem passagem pelo painel são corrigidas na leitura; qualquer valor
-     salvo depois disso pelo administrador prevalece. */
-  function aplicarLimite(s) {
-    if (!s || s.limiteRevisado) return s;
-    if ((s.horaFim || '') === '17:00') { s = Object.assign({}, s, { horaFim: '14:30' }); }
-    return s;
-  }
-  function getSettings() { return aplicarLimite(limparSensiveis(read().settings)); }
-  function saveSettings(patch) {
-    var db = read();
-    db.settings = limparSensiveis(Object.assign({}, db.settings, limparSensiveis(patch || {})));
-    db.settings.limiteRevisado = true;
-    db.settings.whatsappNumero = '55' + digits(db.settings.whatsapp);
-    return write(db).settings;
   }
 
   /* ---------- ambientes ---------- */
-  function getSpaces(onlyActive) {
-    var list = read().spaces.slice().sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); });
-    return onlyActive ? list.filter(function (s) { return s.ativo; }) : list;
+  function getAmbientes(soAtivos) {
+    var l = ler().ambientes.slice().sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); });
+    return soAtivos ? l.filter(function (a) { return a.ativo; }) : l;
   }
-  function getSpaceById(id) { return read().spaces.filter(function (s) { return s.id === id; })[0] || null; }
-  function spaceName(id) { var s = getSpaceById(id); return s ? s.nome : '—'; }
-  function saveSpace(space) {
-    var db = read();
-    if (space.id) {
-      db.spaces = db.spaces.map(function (s) { return s.id === space.id ? Object.assign({}, s, space) : s; });
-    } else {
-      space.id = uuid();
-      space.ordem = space.ordem || db.spaces.length + 1;
-      if (space.ativo === undefined) space.ativo = true;
-      db.spaces.push(space);
-    }
-    write(db);
-    return space;
+  function slug(n) { return String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+  function getAmbiente(id) {
+    if (!id) return null;
+    var l = ler().ambientes;
+    return l.filter(function (a) { return a.id === id; })[0] || l.filter(function (a) { return slug(a.nome) === id; })[0] || null;
   }
-  function deleteSpace(id) {
-    var db = read();
-    db.spaces = db.spaces.filter(function (s) { return s.id !== id; });
-    return write(db);
+  /* padrões locais (foto, tipo) achados pelo nome — usados quando o banco não tem */
+  function padraoPorNome(nome) { var k = slug(nome); return AMBIENTES.filter(function (a) { return slug(a.nome) === k; })[0] || null; }
+  function nomeAmbiente(id, r) { var a = getAmbiente(id); return a ? a.nome : ((r && r.ambienteNome) || '—'); }
+  function salvarAmbiente(a) {
+    var db = ler();
+    if (a.id && getAmbiente(a.id)) db.ambientes = db.ambientes.map(function (x) { return x.id === a.id ? Object.assign({}, x, a) : x; });
+    else { a.id = a.id || uuid(); a.ordem = a.ordem || db.ambientes.length + 1; if (a.ativo === undefined) a.ativo = true; db.ambientes.push(a); }
+    gravar(db); avisar('ambiente', getAmbiente(a.id)); return a;
   }
+  function excluirAmbiente(id) { var db = ler(); db.ambientes = db.ambientes.filter(function (a) { return a.id !== id; }); gravar(db); avisar('excluir-ambiente', { id: id }); }
 
   /* ---------- bloqueios ---------- */
-  function getBlocks() { return read().blocks.slice(); }
-  function saveBlock(b) {
-    var db = read();
-    b.id = b.id || uuid();
-    var found = false;
-    db.blocks = db.blocks.map(function (x) { if (x.id === b.id) { found = true; return Object.assign({}, x, b); } return x; });
-    if (!found) db.blocks.push(b);
-    write(db);
-    return b;
-  }
-  function deleteBlock(id) {
-    var db = read();
-    db.blocks = db.blocks.filter(function (b) { return b.id !== id; });
-    return write(db);
-  }
-  function isBlocked(data, hora, ambienteId) {
-    var toMin = function (t) { var p = String(t || '0:0').split(':'); return (+p[0]) * 60 + (+p[1] || 0); };
+  function getBloqueios() { return ler().bloqueios.slice().sort(function (a, b) { return a.data < b.data ? -1 : 1; }); }
+  function salvarBloqueio(b) { var db = ler(); b.id = uuid(); db.bloqueios.push(b); gravar(db); avisar('bloqueio', b); return b; }
+  function excluirBloqueio(id) { var db = ler(); db.bloqueios = db.bloqueios.filter(function (b) { return b.id !== id; }); gravar(db); avisar('excluir-bloqueio', { id: id }); }
+  function bloqueado(data, hora, ambId) {
     var h = toMin(hora);
-    var hit = getBlocks().filter(function (b) {
-      if (b.data !== data) return false;
-      if (b.ambienteId && ambienteId && b.ambienteId !== ambienteId) return false;
-      if (!b.horaInicio && !b.horaFim) return true;
-      return h >= toMin(b.horaInicio || '00:00') && h <= toMin(b.horaFim || '23:59');
+    var b = ler().bloqueios.filter(function (x) {
+      if (x.data !== data) return false;
+      if (x.ambienteId && ambId && x.ambienteId !== ambId) return false;
+      if (!x.horaInicio && !x.horaFim) return true;
+      if (!hora) return false;
+      return h >= toMin(x.horaInicio || '00:00') && h <= toMin(x.horaFim || '23:59');
     })[0];
-    return hit ? { blocked: true, motivo: hit.motivo || 'Período bloqueado' } : { blocked: false };
+    return b || null;
+  }
+  function diaFechado(data) {
+    return ler().bloqueios.some(function (x) { return x.data === data && !x.ambienteId && !x.horaInicio && !x.horaFim; });
   }
 
-  /* ---------- capacidade / disponibilidade ---------- */
-  function ocupacao(data, hora, ambienteId) {
-    return read().reservations.reduce(function (acc, r) {
-      if (r.data !== data || r.hora !== hora || r.ambienteId !== ambienteId) return acc;
-      if (r.status === STATUS.CANCELADA || r.status === STATUS.NOSHOW) return acc;
-      return acc + (+r.pessoas || 0);
+  /* ---------- ocupação (apenas reservas deste navegador) ---------- */
+  function ocupacao(data, hora, ambId) {
+    return ler().reservas.reduce(function (s, r) {
+      if (r.data !== data || r.ambienteId !== ambId) return s;
+      if (hora && r.hora !== hora) return s;
+      if (r.status === STATUS.CANCELADA || r.status === STATUS.NOSHOW) return s;
+      return s + (+r.pessoas || 0);
     }, 0);
   }
-  function checkAvailability(data, hora, ambienteId, pessoas) {
-    var sp = getSpaceById(ambienteId);
-    if (!sp || !sp.ativo) return { ok: false, motivo: 'Ambiente indisponível.' };
-    var blk = isBlocked(data, hora, ambienteId);
-    if (blk.blocked) return { ok: false, motivo: blk.motivo };
-    var cap = +sp.capacidade || 0;
-    var usado = ocupacao(data, hora, ambienteId);
-    if (cap > 0 && usado + (+pessoas || 0) > cap) {
-      return { ok: false, motivo: 'Este ambiente não está disponível neste horário.', ocupado: usado, capacidade: cap };
-    }
-    return { ok: true, ocupado: usado, capacidade: cap, restante: cap > 0 ? cap - usado : null };
-  }
 
-  /* ---------- código da reserva ---------- */
-  function nextCode(data) {
-    var base = 'CB-' + String(data || todayISO()).replace(/-/g, '') + '-';
-    var n = read().reservations.filter(function (r) { return r.codigo && r.codigo.indexOf(base) === 0; })
-      .map(function (r) { return +r.codigo.split('-')[2] || 0; });
-    var seq = (n.length ? Math.max.apply(null, n) : 0) + 1;
-    var code = base + String(seq).padStart(5, '0');
-    while (getReservationByCode(code)) { seq++; code = base + String(seq).padStart(5, '0'); }
-    return code;
+  /* ---------- código ---------- */
+  function novoCodigo(data) {
+    var base = 'CB-' + String(data || hoje()).replace(/-/g, '').slice(2) + '-';
+    var c, tent = 0;
+    do { c = base + Math.random().toString(36).slice(2, 6).toUpperCase().replace(/[O0IL1]/g, 'X'); tent++; }
+    while (getReservaPorCodigo(c) && tent < 50);
+    return c;
   }
 
   /* ---------- reservas ---------- */
-  function getReservations(filter) {
-    var list = read().reservations.slice().sort(function (a, b) {
-      return (a.data + a.hora) < (b.data + b.hora) ? 1 : -1;
-    });
-    if (!filter) return list;
-    return list.filter(function (r) {
-      if (filter.data && r.data !== filter.data) return false;
-      if (filter.status && r.status !== filter.status) return false;
-      if (filter.ambienteId && r.ambienteId !== filter.ambienteId) return false;
-      if (filter.nome && String(r.nome).toLowerCase().indexOf(String(filter.nome).toLowerCase()) < 0) return false;
-      if (filter.telefone && digits(r.telefone).indexOf(digits(filter.telefone)) < 0) return false;
-      // atendimentos concluídos saem da lista de trabalho; ficam nos relatórios
-      if (filter.ocultarConcluidas && STATUS && r.status === STATUS.CONCLUIDA) return false;
+  function ordenar(l) { return l.sort(function (a, b) { return (a.data + a.hora) < (b.data + b.hora) ? 1 : -1; }); }
+  function getReservas(f) {
+    var l = ordenar(ler().reservas.slice());
+    if (!f) return l;
+    var busca = f.busca ? String(f.busca).toLowerCase() : '';
+    return l.filter(function (r) {
+      if (f.data && r.data !== f.data) return false;
+      if (f.de && r.data < f.de) return false;
+      if (f.ate && r.data > f.ate) return false;
+      if (f.status && r.status !== f.status) return false;
+      if (f.ambienteId && r.ambienteId !== f.ambienteId) return false;
+      if (busca) {
+        var alvo = (r.nome + ' ' + r.telefone + ' ' + r.email + ' ' + r.codigo).toLowerCase();
+        if (alvo.indexOf(busca) < 0 && (!digits(busca) || digits(r.telefone).indexOf(digits(busca)) < 0)) return false;
+      }
       return true;
     });
   }
-  function getReservationById(id) { return read().reservations.filter(function (r) { return r.id === id; })[0] || null; }
-  function getReservationByCode(c) { return read().reservations.filter(function (r) { return r.codigo === c; })[0] || null; }
+  function getReserva(id) { return ler().reservas.filter(function (r) { return r.id === id; })[0] || null; }
+  function getReservaPorCodigo(c) { return ler().reservas.filter(function (r) { return r.codigo === c; })[0] || null; }
 
-  function saveReservation(data) {
-    var db = read();
-    var now = new Date().toISOString();
+  function validarReserva(d) {
+    var e = {};
+    var c = ler().config;
+    if (limpar(d.nome).length < 3) e.nome = 'Informe seu nome completo.';
+    if (!telValido(d.telefone)) e.telefone = 'Informe um WhatsApp com DDD, ex.: (85) 99999-9999.';
+    if (!emailValido(d.email)) e.email = 'Informe um e-mail válido, ex.: nome@gmail.com.';
+    var p = parseInt(d.pessoas, 10);
+    if (!p || p < 1) e.pessoas = 'Informe quantas pessoas vêm.';
+    else if (p > (+c.maxPessoas || 60)) e.pessoas = 'Para mais de ' + c.maxPessoas + ' pessoas, fale com a gente no WhatsApp.';
+    if (!d.ambienteId || !getAmbiente(d.ambienteId)) e.ambienteId = 'Escolha onde você quer ficar.';
+    if (!d.data) e.data = 'Escolha a data.';
+    else if (d.data < hoje()) e.data = 'Essa data já passou.';
+    else if (diaFechado(d.data)) e.data = 'Não estaremos recebendo reservas nesse dia.';
+    if (!d.hora) e.hora = 'Escolha o horário.';
+    else if (d.data && horarios(d.data).indexOf(d.hora) < 0) e.hora = 'Esse horário não está mais disponível.';
+    if (!e.ambienteId && !e.data && !e.hora && bloqueado(d.data, d.hora, d.ambienteId)) e.ambienteId = 'Esse ambiente não está disponível nesse horário.';
+    return e;
+  }
+
+  function criarReserva(d, origem) {
+    var db = ler(), agora = new Date().toISOString();
+    var amb = getAmbiente(d.ambienteId);
     var r = {
       id: uuid(),
-      codigo: nextCode(data.data),
-      nome: limparTexto(data.nome, 80),
-      telefone: maskPhone(data.telefone),
-      email: limparTexto(data.email, 120),
-      data: data.data,
-      hora: data.hora,
-      pessoas: Math.min(Math.max(parseInt(data.pessoas, 10) || 1, 1), 500),
-      ambienteId: data.ambienteId,
-      observacoes: limparTexto(data.observacoes, 500),
-      status: STATUS.PENDENTE,
-      demo: !!data.demo,
-      createdAt: now,
-      updatedAt: now,
-      historico: [{ em: now, texto: 'Reserva criada' }]
+      codigo: d.codigo || novoCodigo(d.data),
+      nome: limpar(d.nome, 80),
+      telefone: mascaraTel(d.telefone),
+      email: limpar(d.email, 120).toLowerCase(),
+      pessoas: Math.min(Math.max(parseInt(d.pessoas, 10) || 1, 1), 500),
+      ambienteId: d.ambienteId,
+      ambienteNome: amb ? amb.nome : limpar(d.ambienteNome, 80),
+      data: d.data,
+      hora: d.hora,
+      observacoes: limpar(d.observacoes, 400),
+      status: d.status || STATUS.PENDENTE,
+      origem: origem || 'site',
+      criadoEm: d.criadoEm || agora,
+      atualizadoEm: agora,
+      historico: [{ em: agora, texto: origem === 'painel' ? 'Registrada no painel' : origem === 'whatsapp' ? 'Importada da mensagem do WhatsApp' : origem === 'planilha' ? 'Trazida da planilha' : 'Solicitada pelo site' }]
     };
-    db.reservations.push(r);
-    write(db);
-    saveCustomer({ nome: r.nome, telefone: r.telefone, email: r.email });
-    try { global.localStorage.setItem('cumbuco_last_code', r.codigo); } catch (e) {}
+    db.reservas.push(r); gravar(db);
+    if (origem !== 'site') avisar('reserva', r);
     return r;
   }
-
-  function updateReservation(id, patch, logTexto) {
-    var db = read();
-    var out = null;
-    db.reservations = db.reservations.map(function (r) {
+  function atualizarReserva(id, patch, log) {
+    var db = ler(), out = null, agora = new Date().toISOString();
+    db.reservas = db.reservas.map(function (r) {
       if (r.id !== id) return r;
-      var now = new Date().toISOString();
-      var next = Object.assign({}, r, patch, { updatedAt: now });
-      next.historico = (r.historico || []).concat([{ em: now, texto: logTexto || 'Reserva atualizada' }]);
-      out = next;
-      return next;
+      out = Object.assign({}, r, patch, { atualizadoEm: agora });
+      if (patch.ambienteId) { var a = getAmbiente(patch.ambienteId); if (a) out.ambienteNome = a.nome; }
+      out.historico = (r.historico || []).concat([{ em: agora, texto: log || 'Dados alterados' }]);
+      return out;
     });
-    write(db);
-    return out;
+    gravar(db); if (out) avisar('reserva', out); return out;
   }
-  /* O horário de chegada e de saída fica registrado no histórico da reserva
-     (que é gravado no banco), e os relatórios leem de lá. */
-  function setStatus(id, status) {
-    return updateReservation(id, { status: status }, 'Status alterado para ' + status);
-  }
-  /* Devolve o instante em que a reserva entrou num status, lendo o histórico. */
-  function statusEm(r, status) {
-    var alvo = 'Status alterado para ' + status;
-    var achou = (r.historico || []).filter(function (h) { return h.texto === alvo; }).pop();
-    return achou ? achou.em : null;
-  }
-  function deleteReservation(id) {
-    var db = read();
-    db.reservations = db.reservations.filter(function (r) { return r.id !== id; });
-    return write(db);
+  function mudarStatus(id, st) { return atualizarReserva(id, { status: st }, 'Status: ' + st); }
+  function excluirReserva(id) { var db = ler(), r = getReserva(id); db.reservas = db.reservas.filter(function (x) { return x.id !== id; }); gravar(db); if (r) avisar('excluir-reserva', r); }
+
+  /* ---------- clientes (derivados das reservas) ---------- */
+  function getClientes() {
+    var m = {};
+    ler().reservas.forEach(function (r) {
+      var k = digits(r.telefone) || r.email; if (!k) return;
+      var c = m[k] || (m[k] = { nome: r.nome, telefone: r.telefone, email: r.email, reservas: 0, pessoas: 0, cancelamentos: 0, faltas: 0, ultima: '' });
+      c.reservas++; c.pessoas += +r.pessoas || 0;
+      if (r.status === STATUS.CANCELADA) c.cancelamentos++;
+      if (r.status === STATUS.NOSHOW) c.faltas++;
+      if (r.data > c.ultima) { c.ultima = r.data; c.nome = r.nome; if (r.email) c.email = r.email; }
+    });
+    return Object.keys(m).map(function (k) { return m[k]; }).sort(function (a, b) { return b.reservas - a.reservas || (a.ultima < b.ultima ? 1 : -1); });
   }
 
-  /* ---------- clientes ---------- */
-  function getCustomers() {
-    var res = read().reservations;
-    return read().customers.slice().map(function (c) {
-      var meus = res.filter(function (r) { return digits(r.telefone) === digits(c.telefone); });
-      return Object.assign({}, c, {
-        reservas: meus.length,
-        cancelamentos: meus.filter(function (r) { return r.status === STATUS.CANCELADA; }).length,
-        noshows: meus.filter(function (r) { return r.status === STATUS.NOSHOW; }).length,
-        ultima: meus.map(function (r) { return r.data; }).sort().pop() || ''
-      });
-    }).sort(function (a, b) { return b.reservas - a.reservas; });
-  }
-  function saveCustomer(c) {
-    var db = read();
-    var key = digits(c.telefone);
-    var found = db.customers.filter(function (x) { return digits(x.telefone) === key; })[0];
-    if (found) {
-      found.nome = c.nome || found.nome;
-      found.email = c.email || found.email;
-    } else {
-      db.customers.push({ id: uuid(), nome: c.nome, telefone: maskPhone(c.telefone), email: c.email || '', createdAt: new Date().toISOString() });
-    }
-    write(db);
-    return found || c;
-  }
-
-  /* Remove o cliente da base. As reservas dele continuam guardadas:
-     o cadastro volta a ser criado se ele reservar de novo. */
-  function deleteCustomer(id) {
-    var db = read();
-    db.customers = db.customers.filter(function (c) { return c.id !== id; });
-    write(db);
-    return id;
-  }
-
-  /* ---------- lista de espera ---------- */
-  function getWaitlist() { return read().waitlist.slice().reverse(); }
-  function saveWaitlist(w) {
-    var db = read();
-    w.id = uuid();
-    w.createdAt = new Date().toISOString();
-    db.waitlist.push(w);
-    write(db);
-    return w;
-  }
-  function deleteWaitlist(id) {
-    var db = read();
-    db.waitlist = db.waitlist.filter(function (w) { return w.id !== id; });
-    return write(db);
-  }
-
-  /* ---------- relatórios ---------- */
-  function report() {
-    var res = read().reservations;
-    var group = function (keyFn) {
-      var m = {};
-      res.forEach(function (r) { var k = keyFn(r); m[k] = (m[k] || 0) + 1; });
-      return Object.keys(m).sort().map(function (k) { return { chave: k, valor: m[k] }; });
-    };
-    return {
-      total: res.length,
-      pessoas: res.reduce(function (a, r) { return a + (+r.pessoas || 0); }, 0),
-      porDia: group(function (r) { return r.data; }),
-      porAmbiente: group(function (r) { return spaceName(r.ambienteId); }),
-      porHora: group(function (r) { return r.hora; }),
-      cancelamentos: res.filter(function (r) { return r.status === STATUS.CANCELADA; }).length,
-      noshows: res.filter(function (r) { return r.status === STATUS.NOSHOW; }).length
-    };
-  }
-  function dashboard() {
-    var hoje = todayISO(), res = read().reservations;
-    var doDia = res.filter(function (r) { return r.data === hoje; });
+  /* ---------- números ---------- */
+  function resumo() {
+    var h = hoje(), rs = ler().reservas;
+    var ativas = function (r) { return r.status !== STATUS.CANCELADA && r.status !== STATUS.NOSHOW; };
+    var doDia = rs.filter(function (r) { return r.data === h && ativas(r); });
     return {
       hoje: doDia.length,
-      pendentes: res.filter(function (r) { return r.status === STATUS.PENDENTE; }).length,
-      confirmadas: res.filter(function (r) { return r.status === STATUS.CONFIRMADA; }).length,
-      canceladas: res.filter(function (r) { return r.status === STATUS.CANCELADA; }).length,
-      pessoasHoje: doDia.reduce(function (a, r) { return a + (+r.pessoas || 0); }, 0),
-      proximas: res.filter(function (r) { return r.data >= hoje && r.status !== STATUS.CANCELADA; })
-        .sort(function (a, b) { return (a.data + a.hora) > (b.data + b.hora) ? 1 : -1; }).slice(0, 6)
+      pessoasHoje: doDia.reduce(function (s, r) { return s + (+r.pessoas || 0); }, 0),
+      pendentes: rs.filter(function (r) { return r.status === STATUS.PENDENTE && r.data >= h; }).length,
+      confirmadas: rs.filter(function (r) { return r.status === STATUS.CONFIRMADA && r.data >= h; }).length,
+      proximas: rs.filter(function (r) { return r.data >= h && ativas(r); })
+        .sort(function (a, b) { return (a.data + a.hora) > (b.data + b.hora) ? 1 : -1; }),
+      total: rs.length
     };
   }
 
-  /* ---------- CSV / backup ---------- */
-  function csvCell(v) { return '"' + String(v === undefined || v === null ? '' : v).replace(/"/g, '""') + '"'; }
-  function reservationsCSV(list) {
-    var rows = [['Codigo', 'Nome', 'Telefone', 'Data', 'Hora', 'Pessoas', 'Ambiente', 'Status', 'Observacoes']];
-    (list || getReservations()).forEach(function (r) {
-      rows.push([r.codigo, r.nome, r.telefone, fmtDate(r.data), r.hora, r.pessoas, spaceName(r.ambienteId), r.status, r.observacoes]);
+  /* ---------- exportar / backup ---------- */
+  function celula(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+  function csv(lista) {
+    var rows = [['Código', 'Nome', 'WhatsApp', 'E-mail', 'Data', 'Horário', 'Pessoas', 'Local', 'Status', 'Observações', 'Criada em']];
+    (lista || getReservas()).forEach(function (r) {
+      rows.push([r.codigo, r.nome, r.telefone, r.email, fmtData(r.data), r.hora, r.pessoas, nomeAmbiente(r.ambienteId, r), r.status, r.observacoes, fmtCarimbo(r.criadoEm)]);
     });
-    return '\uFEFF' + rows.map(function (row) { return row.map(csvCell).join(';'); }).join('\r\n');
+    return '﻿' + rows.map(function (l) { return l.map(celula).join(';'); }).join('\r\n');
   }
-  function download(filename, content, mime) {
-    var blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
-    var a = global.document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    global.document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  function baixar(nome, conteudo, tipo) {
+    var blob = new Blob([conteudo], { type: tipo || 'text/plain;charset=utf-8' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
   }
-  function exportCSV(list) { download('reservas-cumbuco-beach.csv', reservationsCSV(list), 'text/csv;charset=utf-8'); }
-  function exportBackup() { download('backup-cumbuco-beach.json', JSON.stringify(read(), null, 2), 'application/json'); }
-  function importBackup(json) {
-    var db = JSON.parse(json);
-    if (!db || !db.spaces || !db.reservations) throw new Error('Arquivo de backup inválido.');
-    write(db);
-    return db;
+  function exportarCSV(lista) { baixar('reservas-cumbuco-beach-' + hoje() + '.csv', csv(lista), 'text/csv;charset=utf-8'); }
+  function exportarBackup() {
+    var db = JSON.parse(JSON.stringify(ler())); delete db.config.senhaHash;
+    baixar('backup-cumbuco-beach-' + hoje() + '.json', JSON.stringify(db, null, 2), 'application/json');
   }
-  function resetAll() { return write(defaultDB()); }
+  function importarBackup(txt) {
+    var novo = JSON.parse(txt);
+    if (!novo || !Array.isArray(novo.reservas) || !Array.isArray(novo.ambientes)) throw new Error('Este arquivo não é um backup do sistema.');
+    var db = ler();
+    var cods = {}; db.reservas.forEach(function (r) { cods[r.codigo] = 1; });
+    var add = novo.reservas.filter(function (r) { return r && r.codigo && !cods[r.codigo]; });
+    db.reservas = db.reservas.concat(add);
+    db.ambientes = novo.ambientes;
+    db.bloqueios = novo.bloqueios || db.bloqueios;
+    var senha = db.config.senhaHash; db.config = Object.assign({}, db.config, novo.config || {}, { senhaHash: senha });
+    gravar(db); return add.length;
+  }
 
-  /* ---------- dados de demonstração ---------- */
-  function seedDemo() {
-    var db = read();
-    var sp = getSpaces(true);
-    var d = new Date();
-    var iso = function (off) {
-      var x = new Date(d.getTime() + off * 86400000);
-      return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+  /* ---------- aplicar dados vindos do banco (sem disparar o gancho) ---------- */
+  var ultimaNuvem = '';
+  function aplicarNuvem(d) {
+    var db = ler();
+    if (d.ambientes && d.ambientes.length) db.ambientes = d.ambientes;
+    if (d.bloqueios) db.bloqueios = d.bloqueios;
+    if (d.config) { var senha = db.config.senhaHash; db.config = Object.assign({}, db.config, d.config, { senhaHash: senha }); }
+    if (d.reservas) db.reservas = d.reservas;
+    var novo = JSON.stringify([db.ambientes, db.bloqueios, db.config, db.reservas]);
+    if (novo === ultimaNuvem) return;   /* nada mudou: não redesenha */
+    ultimaNuvem = novo;
+    gravar(db);
+  }
+
+  /* ---------- importar texto da mensagem do WhatsApp ---------- */
+  function lerMensagem(txt) {
+    var t = String(txt || '').replace(/\*/g, '');
+    var pega = function (rot) { var m = t.match(new RegExp(rot + '\\s*:\\s*(.+)', 'i')); return m ? m[1].trim() : ''; };
+    var dataTxt = pega('Data'), iso = '';
+    var m1 = dataTxt.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if (m1) iso = m1[3] + '-' + m1[2] + '-' + m1[1];
+    var ambNome = pega('Local');
+    var amb = getAmbientes().filter(function (a) { return a.nome.toLowerCase() === ambNome.toLowerCase(); })[0];
+    var horaM = pega('Hor[aá]rio').match(/(\d{1,2})[:h](\d{2})/);
+    return {
+      codigo: (pega('C[oó]digo').match(/CB-[A-Z0-9-]+/) || [''])[0],
+      nome: pega('Nome'), telefone: pega('WhatsApp'), email: pega('E-mail'),
+      pessoas: parseInt(pega('Pessoas'), 10) || '',
+      ambienteId: amb ? amb.id : '', ambienteNome: ambNome,
+      data: iso, hora: horaM ? pad(horaM[1]) + ':' + horaM[2] : '',
+      observacoes: pega('Observa[cç][oõ]es').replace(/^—$/, '')
     };
-    var demos = [
-      { nome: 'Ana Ribeiro (DEMO)', telefone: '(85) 98888-1010', data: iso(0), hora: '12:00', pessoas: 6, i: 0, status: STATUS.CONFIRMADA },
-      { nome: 'Marcos Lima (DEMO)', telefone: '(85) 98888-2020', data: iso(0), hora: '13:30', pessoas: 4, i: 4, status: STATUS.PENDENTE },
-      { nome: 'Família Souza (DEMO)', telefone: '(85) 98888-3030', data: iso(1), hora: '11:00', pessoas: 10, i: 1, status: STATUS.CONFIRMADA },
-      { nome: 'Juliana Alves (DEMO)', telefone: '(85) 98888-4040', data: iso(2), hora: '16:00', pessoas: 2, i: 7, status: STATUS.PENDENTE },
-      { nome: 'Rafael Costa (DEMO)', telefone: '(85) 98888-5050', data: iso(3), hora: '17:30', pessoas: 8, i: 3, status: STATUS.CANCELADA },
-      { nome: 'Bruna Melo (DEMO)', telefone: '(85) 98888-6060', data: iso(-1), hora: '12:30', pessoas: 5, i: 6, status: STATUS.NOSHOW }
-    ];
-    demos.forEach(function (x) {
-      var amb = sp[x.i] || sp[0];
-      var r = saveReservation({ nome: x.nome, telefone: x.telefone, email: '', data: x.data, hora: x.hora, pessoas: x.pessoas, ambienteId: amb.id, observacoes: 'Registro de demonstração.', demo: true });
-      if (x.status !== STATUS.PENDENTE) setStatus(r.id, x.status);
-    });
-    return getReservations();
-  }
-  function hasDemo() { return read().reservations.some(function (r) { return r.demo; }); }
-  function clearDemo() {
-    var db = read();
-    db.reservations = db.reservations.filter(function (r) { return !r.demo; });
-    db.customers = db.customers.filter(function (c) { return String(c.nome).indexOf('(DEMO)') < 0; });
-    return write(db);
   }
 
-  /* ---------- autenticação ----------
-     Com o banco compartilhado ativo (js/cloud.js) quem autentica é o
-     Supabase: nenhuma senha existe neste código. A senha local abaixo só
-     funciona no modo offline, sem banco, para demonstração. */
-  var SENHA_DEMO_LOCAL = 'cumbuco-demo';
-  function nuvemAtiva() {
-    var c = global.CB_SUPABASE || {};
-    return !!(c.url && c.anonKey && String(c.url).indexOf('SUA-') < 0);
-  }
-  function login(user, pass) {
-    if (nuvemAtiva()) {
-      global.CB.ultimoErroLogin = 'Entre com o e-mail e a senha cadastrados no banco (Supabase).';
-      return false;
-    }
-    if (String(user || '').trim().toLowerCase() === 'admin' && pass === SENHA_DEMO_LOCAL) {
-      try { global.sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
+  /* ---------- acesso ao painel ---------- */
+  function entrar(senha) {
+    if (hash(String(senha || '')) === ler().config.senhaHash) {
+      try { g.sessionStorage.setItem(SESSION_KEY, String(Date.now())); } catch (e) {}
       return true;
     }
     return false;
   }
-  /* Ao sair, o cache local de dados pessoais é apagado: num computador
-     compartilhado ninguém encontra nome/telefone de clientes depois. */
-  function logout() {
-    try { global.sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
-    try {
-      var db = read();
-      db.reservations = [];
-      db.customers = [];
-      db.waitlist = [];
-      write(db);
-    } catch (e) {}
+  function trocarSenha(atual, nova) {
+    var db = ler();
+    if (hash(String(atual || '')) !== db.config.senhaHash) return 'A senha atual está incorreta.';
+    if (String(nova || '').length < 6) return 'A nova senha precisa ter pelo menos 6 caracteres.';
+    db.config.senhaHash = hash(nova); gravar(db); return '';
   }
-  function isLogged() { try { return global.sessionStorage.getItem(SESSION_KEY) === '1'; } catch (e) { return false; } }
-  function requireAuth() {
-    if (!isLogged()) { global.location.replace('admin-login.html'); return false; }
-    return true;
+  function senhaPadrao() { return ler().config.senhaHash === hash(SENHA_INICIAL); }
+  function marcarSessao() { try { g.sessionStorage.setItem(SESSION_KEY, String(Date.now())); } catch (e) {} }
+  function sair() { try { g.sessionStorage.removeItem(SESSION_KEY); } catch (e) {} }
+  function logado() {
+    try { var t = +g.sessionStorage.getItem(SESSION_KEY); return !!t && Date.now() - t < 12 * 3600 * 1000; } catch (e) { return false; }
   }
 
-  global.CB = {
-    STATUS: STATUS, STATUS_LIST: STATUS_LIST, STATUS_COLOR: STATUS_COLOR,
-    todayISO: todayISO, fmtDate: fmtDate, fmtStamp: fmtStamp, maskPhone: maskPhone,
-    validPhone: validPhone, validEmail: validEmail, digits: digits, uid: uid,
-    getTimeSlots: getTimeSlots,
-    getSettings: getSettings, saveSettings: saveSettings,
-    getSpaces: getSpaces, getSpaceById: getSpaceById, spaceName: spaceName, saveSpace: saveSpace, deleteSpace: deleteSpace,
-    defaultSpaceByName: defaultSpaceByName,
-    getBlocks: getBlocks, saveBlock: saveBlock, deleteBlock: deleteBlock, isBlocked: isBlocked,
-    ocupacao: ocupacao, checkAvailability: checkAvailability,
-    getReservations: getReservations, getReservationById: getReservationById, getReservationByCode: getReservationByCode,
-    saveReservation: saveReservation, updateReservation: updateReservation, setStatus: setStatus, statusEm: statusEm, deleteReservation: deleteReservation,
-    getCustomers: getCustomers, saveCustomer: saveCustomer, deleteCustomer: deleteCustomer,
-    getWaitlist: getWaitlist, saveWaitlist: saveWaitlist, deleteWaitlist: deleteWaitlist,
-    report: report, dashboard: dashboard,
-    reservationsCSV: reservationsCSV, exportCSV: exportCSV, exportBackup: exportBackup, importBackup: importBackup,
-    download: download, resetAll: resetAll,
-    seedDemo: seedDemo, clearDemo: clearDemo, hasDemo: hasDemo,
-    login: login, logout: logout, isLogged: isLogged, requireAuth: requireAuth,
-    /* usados pela camada de banco compartilhado (js/cloud.js) */
-    __db: read, __replace: write,
-    onChange: function (fn) { global.addEventListener('cb:changed', fn); return function () { global.removeEventListener('cb:changed', fn); }; }
+  g.CB = {
+    CFG: CFG, STATUS: STATUS, STATUS_LIST: STATUS_LIST, STATUS_TOM: STATUS_TOM, CATEGORIAS: CATEGORIAS,
+    hoje: hoje, somaDias: somaDias, fmtData: fmtData, dataExtenso: dataExtenso, fmtCarimbo: fmtCarimbo,
+    mascaraTel: mascaraTel, telValido: telValido, emailValido: emailValido, digits: digits, limpar: limpar, toMin: toMin,
+    getConfig: getConfig, salvarConfig: salvarConfig, horarios: horarios,
+    getAmbientes: getAmbientes, getAmbiente: getAmbiente, nomeAmbiente: nomeAmbiente, salvarAmbiente: salvarAmbiente, excluirAmbiente: excluirAmbiente,
+    getBloqueios: getBloqueios, salvarBloqueio: salvarBloqueio, excluirBloqueio: excluirBloqueio, bloqueado: bloqueado, diaFechado: diaFechado,
+    ocupacao: ocupacao,
+    getReservas: getReservas, getReserva: getReserva, getReservaPorCodigo: getReservaPorCodigo,
+    validarReserva: validarReserva, criarReserva: criarReserva, atualizarReserva: atualizarReserva, mudarStatus: mudarStatus, excluirReserva: excluirReserva,
+    getClientes: getClientes, resumo: resumo,
+    exportarCSV: exportarCSV, exportarBackup: exportarBackup, importarBackup: importarBackup, baixar: baixar,
+    slug: slug, padraoPorNome: padraoPorNome, aplicarNuvem: aplicarNuvem, definirGancho: function (fn) { gancho = fn; },
+    lerMensagem: lerMensagem,
+    entrar: entrar, sair: sair, marcarSessao: marcarSessao, logado: logado, trocarSenha: trocarSenha, senhaPadrao: senhaPadrao,
+    aoMudar: function (fn) { g.addEventListener('cb:mudou', fn); }
   };
 })(window);
