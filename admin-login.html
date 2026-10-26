@@ -52,7 +52,7 @@
     N.entrar(em.value, s.value).then(function (r) {
       bt.disabled = false; bt.textContent = 'Entrar no painel';
       if (r.ok) { CB.marcarSessao(); ir(); return; }
-      if (r.credenciais) { erro('E-mail ou senha incorretos.'); s.select(); return; }
+      if (r.credenciais) { erro(r.msg || 'E-mail ou senha incorretos.'); s.select(); return; }
       /* banco em pausa ou fora do ar */
       if (CB.entrar(s.value)) { ir(); return; }
       erro('O banco está em pausa agora. Para entrar no modo WhatsApp, deixe o e-mail em branco e use a senha do modo WhatsApp.');
