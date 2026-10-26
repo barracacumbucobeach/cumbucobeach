@@ -53,7 +53,7 @@
     antecedenciaDias: 60,
     msgConfirmacao: 'Sua reserva está confirmada. Já estamos esperando por você!',
     msgCancelamento: 'Sua reserva foi cancelada. Se quiser remarcar, é só responder esta mensagem.',
-    politica: 'A reserva é uma solicitação e vale após a confirmação da equipe pelo WhatsApp. Tolerância de 20 minutos após o horário. Cancelamentos devem ser avisados pelo WhatsApp.',
+    politica: 'A reserva é uma solicitação e só vale após a confirmação da Barraca Cumbuco Beach pelo WhatsApp. Cancelamentos devem ser avisados pelo WhatsApp.',
     senhaHash: ''
   };
   var SENHA_INICIAL = 'cumbuco2026';
@@ -379,7 +379,7 @@
     if (m1) iso = m1[3] + '-' + m1[2] + '-' + m1[1];
     var ambNome = pega('Local');
     var amb = getAmbientes().filter(function (a) { return a.nome.toLowerCase() === ambNome.toLowerCase(); })[0];
-    var horaM = pega('Hor[aá]rio').match(/(\d{1,2})[:h](\d{2})/);
+    var horaM = (pega('Hor[aá]rio de chegada') || pega('Hor[aá]rio')).match(/(\d{1,2})[:h](\d{2})/);
     return {
       codigo: (pega('C[oó]digo').match(/CB-[A-Z0-9-]+/) || [''])[0],
       nome: pega('Nome'), telefone: pega('WhatsApp'), email: pega('E-mail'),

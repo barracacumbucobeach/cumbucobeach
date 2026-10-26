@@ -75,7 +75,7 @@
   var a = CB.getAmbiente(r.ambienteId) || {};
   var box = document.getElementById('s-resumo'); box.hidden = false;
   box.innerHTML = '<div class="revisao__foto">' + (a.imagem ? '<img src="' + esc(a.imagem) + '" alt="">' : '') + '<span>' + esc(CB.nomeAmbiente(r.ambienteId, r)) + '</span></div><dl>' +
-    [['Data', CB.dataExtenso(r.data)], ['Horário', r.hora], ['Pessoas', r.pessoas], ['Nome', r.nome], ['WhatsApp', r.telefone], ['E-mail', r.email]]
+    [['Data', CB.dataExtenso(r.data)], ['Horário de chegada', r.hora], ['Pessoas', r.pessoas], ['Nome', r.nome], ['WhatsApp', r.telefone], ['E-mail', r.email]]
       .map(function (x) { return '<div><dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd></div>'; }).join('') + '</dl>';
 })();
 </script>

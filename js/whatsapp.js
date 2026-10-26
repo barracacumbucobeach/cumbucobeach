@@ -35,7 +35,7 @@
       '*Pessoas:* ' + r.pessoas,
       '*Local:* ' + nomeLocal(r),
       '*Data:* ' + dataTxt(r),
-      '*Horário:* ' + r.hora,
+      '*Horário de chegada:* ' + r.hora,
       '',
       '*Observações:* ' + (r.observacoes || '—'),
       '',
@@ -55,7 +55,7 @@
       '*Código:* ' + r.codigo,
       '*Local:* ' + nomeLocal(r),
       '*Data:* ' + dataTxt(r),
-      '*Horário:* ' + r.hora,
+      '*Horário de chegada:* ' + r.hora,
       '*Pessoas:* ' + r.pessoas
     ];
     if (!cancelada) {

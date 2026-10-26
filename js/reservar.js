@@ -68,7 +68,15 @@ function iniciarReserva() {
   }
 
   /* ---------- 2. horas ---------- */
+  /* aviso de chegada: prazo para reservar no mesmo dia */
+  function avisoHoje() {
+    var el = $('#aviso-hoje'); if (!el) return;
+    if (st.data !== CB.hoje()) { el.textContent = ''; return; }
+    var m = CB.toMin(cfg.horaFim) - 30, h = Math.floor(m / 60), mi = m % 60;
+    el.textContent = 'Para hoje, as reservas podem ser feitas até as ' + h + 'h' + (mi ? String(mi).padStart(2, '0') : '') + '.';
+  }
   function renderHoras() {
+    avisoHoje();
     var box = $('#horas');
     if (!st.data) { box.innerHTML = '<div class="vazio-horas" style="grid-column:1/-1">Escolha o dia para ver os horários.</div>'; return; }
     var hs = CB.horarios(st.data);
@@ -200,7 +208,7 @@ function iniciarReserva() {
     var linha = function (rot, val, passo, cheio) { return '<div' + (cheio ? ' class="cheio"' : '') + '><dt>' + rot + ' <button type="button" class="revisao__editar" data-ir="' + passo + '">alterar</button></dt><dd>' + esc(val) + '</dd></div>'; };
     $('#revisao').innerHTML =
       '<div class="revisao__foto">' + (a.imagem ? '<img src="' + esc(a.imagem) + '" alt="">' : '') + '<span>' + esc(a.nome || '') + '</span></div><dl>' +
-      linha('Data', CB.dataExtenso(d.data), 1) + linha('Horário', d.hora, 1) +
+      linha('Data', CB.dataExtenso(d.data), 1) + linha('Horário de chegada', d.hora, 1) +
       linha('Pessoas', d.pessoas + (d.pessoas === 1 ? ' pessoa' : ' pessoas'), 1) + linha('Nome', CB.limpar(d.nome), 2) +
       linha('WhatsApp', CB.mascaraTel(d.telefone), 2) + linha('E-mail', d.email.trim(), 2) +
       (d.observacoes.trim() ? linha('Observações', CB.limpar(d.observacoes, 400), 2, true) : '') + '</dl>';

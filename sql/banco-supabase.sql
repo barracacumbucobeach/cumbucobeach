@@ -59,7 +59,7 @@ insert into public.configuracoes (id, dados) values (1, jsonb_build_object(
   'maxPessoas', 60, 'antecedenciaDias', 60,
   'msgConfirmacao', 'Sua reserva está confirmada. Já estamos esperando por você!',
   'msgCancelamento', 'Sua reserva foi cancelada. Se quiser remarcar, é só responder esta mensagem.',
-  'politica', 'A reserva é uma solicitação e vale após a confirmação da equipe pelo WhatsApp. Tolerância de 20 minutos após o horário. Cancelamentos devem ser avisados pelo WhatsApp.'
+  'politica', 'A reserva é uma solicitação e só vale após a confirmação da Barraca Cumbuco Beach pelo WhatsApp. Cancelamentos devem ser avisados pelo WhatsApp.'
 )) on conflict (id) do nothing;
 
 -- 2. Ambientes iniciais (só se a tabela estiver vazia) --------
