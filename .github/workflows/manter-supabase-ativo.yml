@@ -1,0 +1,25 @@
+name: Manter Supabase ativo
+
+on:
+  schedule:
+    - cron: '17 12 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  acordar:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: https://czctzdqipmowgckicwhj.supabase.co
+      SUPABASE_CHAVE: sb_publishable_QKab9NHWrJJHcB1HL4sHBA_TmnIPSzX
+    steps:
+      - name: Consultar o banco
+        run: |
+          code=$(curl -s -o resposta.txt -w '%{http_code}' \
+            "$SUPABASE_URL/rest/v1/ambientes?select=id&limit=1" \
+            -H "apikey: $SUPABASE_CHAVE" -H "Authorization: Bearer $SUPABASE_CHAVE")
+          echo "Resposta do banco: HTTP $code"
+          cat resposta.txt; echo
+          if [ "$code" != "200" ]; then
+            echo "::error::O banco não respondeu (HTTP $code). Se estiver em pausa, abra o Supabase e clique em Restore project."
+            exit 1
+          fi
